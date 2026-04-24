@@ -21,6 +21,16 @@ public final class AppDependencies: @unchecked Sendable {
     public let actions: ProcessTerminator
     public let permissions: any PermissionsChecker
 
+    /// Live process sampler shared by the Processes window viewmodel and the
+    /// IPC handler (so MCP's `list_processes` sees the same pid universe the
+    /// user sees in the UI). Defaults to `LiveSystemProcessSampler`.
+    public let sampler: any SystemProcessSampler
+
+    /// System-wide memory snapshot provider, injected as a closure so tests
+    /// can swap it without touching Mach APIs. Defaults to
+    /// `SystemMemorySource.snapshot`.
+    public let memorySource: @Sendable () -> SystemMemorySource.Snapshot?
+
     /// Observable state the menu bar reads to show what the user is doing now.
     /// Updated on the main actor from the capture event pump.
     @MainActor public let current: CurrentActivityState
@@ -42,7 +52,10 @@ public final class AppDependencies: @unchecked Sendable {
     }
 
     @MainActor
-    public init() {
+    public init(
+        sampler: (any SystemProcessSampler)? = nil,
+        memorySource: (@Sendable () -> SystemMemorySource.Snapshot?)? = nil
+    ) {
         // Store — ensure the containing directory exists before opening SQLite.
         let storeURL = Self.defaultStoreURL()
         try? FileManager.default.createDirectory(
@@ -86,6 +99,9 @@ public final class AppDependencies: @unchecked Sendable {
 
         self.permissions = SystemPermissionsChecker()
         self.current = CurrentActivityState()
+
+        self.sampler = sampler ?? LiveSystemProcessSampler()
+        self.memorySource = memorySource ?? { SystemMemorySource.snapshot() }
     }
 
     /// Starts capture and begins persisting every event into the SQLite store.
@@ -115,6 +131,25 @@ public final class AppDependencies: @unchecked Sendable {
                 await current.update(with: event)
             }
         }
+
+        startIPCServer()
+    }
+
+    /// Stands up the Mach-service XPC listener so CLI/MCP clients can reach
+    /// the daemon. Safe to call more than once — `bootstrap()` gates this.
+    private func startIPCServer() {
+        let handler = ProductionIPCHandler(
+            store: store,
+            terminator: actions,
+            sampler: sampler,
+            permissions: permissions,
+            memorySource: memorySource,
+            captureStatuses: { [capture] in capture.statuses }
+        )
+        let server = IPCServer(handler: handler)
+        let listener = server.makeMachServiceListener()
+        listener.resume()
+        setIPCServer(server)
     }
 
     /// Forwards the master kill-switch to the action executor. Call from the
