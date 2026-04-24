@@ -73,23 +73,42 @@ public enum WriteTools {
     private static func killApp(client: any ActivityClientProtocol) -> ToolDefinition {
         ToolDefinition(
             name: "kill_app",
-            description: "Terminate an app using the same safety rails as rule-driven kills.",
+            description: "Terminate a running app by bundle_id or by pid (exactly one). Uses the same safety rails as rule-driven kills.",
             inputSchema: .object([
                 "type": .string("object"),
-                "required": .array([.string("bundle_id")]),
                 "properties": .object([
                     "bundle_id": .object(["type": .string("string")]),
+                    "pid": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                    ]),
                     "strategy": .object([
                         "type": .string("string"),
                         "enum": .array([.string("politeQuit"), .string("forceQuit"), .string("signal")]),
                     ]),
                     "force": .object(["type": .string("boolean")]),
                 ]),
+                "oneOf": .array([
+                    .object(["required": .array([.string("bundle_id")])]),
+                    .object(["required": .array([.string("pid")])]),
+                ]),
             ]),
             enabled: false,
             isWrite: true,
             handler: { args in
-                guard let bundle = args["bundle_id"]?.stringValue else {
+                let bundle = args["bundle_id"]?.stringValue
+                // Only treat pid as provided when it is actually an integer; reject strings.
+                let pid: Int32?
+                if let intValue = args["pid"]?.intValue {
+                    guard intValue > 0, intValue <= Int(Int32.max) else {
+                        throw JSONRPCError.invalidParams
+                    }
+                    pid = Int32(intValue)
+                } else {
+                    pid = nil
+                }
+                // Exactly one of bundle_id / pid must be set.
+                guard (bundle != nil) != (pid != nil) else {
                     throw JSONRPCError.invalidParams
                 }
                 let strategyRaw = args["strategy"]?.stringValue ?? Action.KillStrategy.politeQuit.rawValue
@@ -97,6 +116,7 @@ public enum WriteTools {
                 let force = args["force"]?.boolValue ?? false
                 let req = KillAppRequest(
                     bundleID: bundle,
+                    pid: pid,
                     strategy: strategy,
                     force: force,
                     confirmed: true

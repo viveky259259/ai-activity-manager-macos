@@ -18,6 +18,7 @@ public protocol IPCHandler: Sendable {
     func deleteRule(_ request: DeleteRuleRequest) async throws -> EmptyResponse
     func killApp(_ request: KillAppRequest) async throws -> KillAppResponse
     func setFocusMode(_ request: SetFocusRequest) async throws -> EmptyResponse
+    func listProcesses(_ request: ProcessesQuery) async throws -> ProcessesPage
 }
 
 /// Test double for `IPCHandler` that records calls and returns canned responses.
@@ -37,6 +38,7 @@ public final class FakeIPCHandler: IPCHandler, @unchecked Sendable {
         public var deleteRule: [DeleteRuleRequest] = []
         public var killApp: [KillAppRequest] = []
         public var setFocusMode: [SetFocusRequest] = []
+        public var listProcesses: [ProcessesQuery] = []
     }
 
     private struct State {
@@ -60,6 +62,12 @@ public final class FakeIPCHandler: IPCHandler, @unchecked Sendable {
         var rulesResponse: RulesResponse = RulesResponse(rules: [])
         var addRuleResponse: AddRuleResponse?
         var killAppResponse: KillAppResponse = KillAppResponse(outcome: "succeeded")
+        var listProcessesResponse: ProcessesPage = ProcessesPage(
+            processes: [],
+            systemMemoryUsedBytes: nil,
+            systemMemoryTotalBytes: nil,
+            sampledAt: Date(timeIntervalSince1970: 0)
+        )
 
         // Error injection — if set, the matching method throws.
         var statusError: IPCError?
@@ -72,6 +80,7 @@ public final class FakeIPCHandler: IPCHandler, @unchecked Sendable {
         var deleteRuleError: IPCError?
         var killAppError: IPCError?
         var setFocusError: IPCError?
+        var listProcessesError: IPCError?
     }
 
     private let state = OSAllocatedUnfairLock(initialState: State())
@@ -103,6 +112,9 @@ public final class FakeIPCHandler: IPCHandler, @unchecked Sendable {
     public func setKillAppResponse(_ r: KillAppResponse) {
         state.withLock { $0.killAppResponse = r }
     }
+    public func setListProcessesResponse(_ r: ProcessesPage) {
+        state.withLock { $0.listProcessesResponse = r }
+    }
 
     public func stubError(forStatus e: IPCError?) { state.withLock { $0.statusError = e } }
     public func stubError(forQuery e: IPCError?) { state.withLock { $0.queryError = e } }
@@ -114,6 +126,7 @@ public final class FakeIPCHandler: IPCHandler, @unchecked Sendable {
     public func stubError(forDeleteRule e: IPCError?) { state.withLock { $0.deleteRuleError = e } }
     public func stubError(forKillApp e: IPCError?) { state.withLock { $0.killAppError = e } }
     public func stubError(forSetFocus e: IPCError?) { state.withLock { $0.setFocusError = e } }
+    public func stubError(forListProcesses e: IPCError?) { state.withLock { $0.listProcessesError = e } }
 
     // MARK: IPCHandler
 
@@ -204,6 +217,14 @@ public final class FakeIPCHandler: IPCHandler, @unchecked Sendable {
             s.calls.setFocusMode.append(request)
             if let e = s.setFocusError { throw e }
             return EmptyResponse()
+        }
+    }
+
+    public func listProcesses(_ request: ProcessesQuery) async throws -> ProcessesPage {
+        try state.withLock { s throws -> ProcessesPage in
+            s.calls.listProcesses.append(request)
+            if let e = s.listProcessesError { throw e }
+            return s.listProcessesResponse
         }
     }
 }

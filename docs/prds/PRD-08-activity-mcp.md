@@ -32,6 +32,7 @@ Both transports share the same handler core.
 | `app_usage` | `period`, `group_by` | aggregate durations |
 | `list_rules` | `enabled_only?` | rules incl. compiled DSL |
 | `rule_explain` | `rule_id` | NL + DSL + firings + dry-run stats |
+| `list_processes` | `sort_by?`, `order?`, `limit?`, `category?`, `include_restricted?`, `min_memory_bytes?` | process list w/ memory/CPU + app category + system memory snapshot (PRD-10) |
 
 ### 4.2 Write tools (disabled by default)
 
@@ -39,7 +40,7 @@ Both transports share the same handler core.
 |---|---|---|
 | `propose_rule` | `nl_description` | always creates in dry-run; user must activate in-app |
 | `set_rule_enabled` | `rule_id`, `enabled` | posts notification with 10 s undo window |
-| `kill_app` | `bundle_id`, `strategy?` | runs same `ProcessTerminator` with all safety rails |
+| `kill_app` | `bundle_id` **or** `pid`, `strategy?`, `force?` | runs same `ProcessTerminator` with all safety rails; exactly one of bundle_id/pid is required (PRD-10) |
 | `set_focus_mode` | `mode_name`/null | standard |
 
 ## 5. Safety model
@@ -74,7 +75,7 @@ All schemas have a `schema_version` output field.
 
 ## 9. Acceptance
 
-- [ ] `tools/list` returns all 7 read tools + 4 write tools (write tools marked `disabled` when gated).
+- [ ] `tools/list` returns all 8 read tools + 4 write tools (write tools marked `disabled` when gated).
 - [ ] `tools/call` on a disabled write tool returns structured error, does not call IPC.
 - [ ] Each tool emits an audit `ActivityEvent`.
 - [ ] Rate limit test: 61 reads in 60s → 61st returns error.

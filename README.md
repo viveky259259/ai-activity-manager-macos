@@ -2,6 +2,8 @@
 
 Swift-native macOS app combining **natural-language automation** over activity signals (framing D) with **timeline recall / searchable memory** (framing E). For professionals.
 
+MCP-first: an MCP stdio server (`activity-mcp`) exposes live timeline, rules, and process data so AI hosts (Claude Desktop, Cursor, Zed) can answer questions like "which unused entertainment apps are hogging memory right now?" and, with explicit opt-in, terminate them by bundle id or pid — all routed through the same `ProcessTerminator` safety rails used by rules.
+
 ## Repository layout
 
 ```

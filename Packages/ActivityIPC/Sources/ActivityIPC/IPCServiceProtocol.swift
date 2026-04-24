@@ -16,6 +16,7 @@ import Foundation
     func deleteRule(_ request: Data, reply: @escaping @Sendable (Data) -> Void)
     func killApp(_ request: Data, reply: @escaping @Sendable (Data) -> Void)
     func setFocusMode(_ request: Data, reply: @escaping @Sendable (Data) -> Void)
+    func listProcesses(_ request: Data, reply: @escaping @Sendable (Data) -> Void)
 }
 
 /// Helper that produces a shared `NSXPCInterface` for the service protocol.

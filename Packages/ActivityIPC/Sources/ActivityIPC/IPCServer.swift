@@ -189,6 +189,12 @@ final class ExportedObject: NSObject, ActivityIPCServiceProtocol, @unchecked Sen
         }
     }
 
+    func listProcesses(_ request: Data, reply: @escaping @Sendable (Data) -> Void) {
+        dispatch(request, reply: reply) { handler, payload in
+            try await handler.listProcesses(payload)
+        }
+    }
+
     // MARK: Helpers
 
     /// Generic dispatcher that decodes the envelope, validates the version, runs the

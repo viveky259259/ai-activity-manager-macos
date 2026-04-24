@@ -18,6 +18,12 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
         var rulesResponse: RulesResponse = RulesResponse(rules: [])
         var addRuleResponse: AddRuleResponse?
         var killAppResponse: KillAppResponse = KillAppResponse(outcome: "killed")
+        var listProcessesResponse: ProcessesPage = ProcessesPage(
+            processes: [],
+            systemMemoryUsedBytes: nil,
+            systemMemoryTotalBytes: nil,
+            sampledAt: Date(timeIntervalSince1970: 0)
+        )
 
         var capturedTimelineRequest: TimelineRequest?
         var capturedEventsRequest: EventsRequest?
@@ -25,6 +31,7 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
         var capturedToggleRuleRequest: ToggleRuleRequest?
         var capturedKillAppRequest: KillAppRequest?
         var capturedSetFocusRequest: SetFocusRequest?
+        var capturedListProcessesRequest: ProcessesQuery?
 
         var statusError: (any Error)?
         var timelineError: (any Error)?
@@ -34,6 +41,7 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
         var toggleRuleError: (any Error)?
         var killAppError: (any Error)?
         var setFocusError: (any Error)?
+        var listProcessesError: (any Error)?
     }
 
     private let lock = OSAllocatedUnfairLock(initialState: State())
@@ -47,6 +55,7 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
     func setRules(_ response: RulesResponse) { lock.withLock { $0.rulesResponse = response } }
     func setAddRule(_ response: AddRuleResponse) { lock.withLock { $0.addRuleResponse = response } }
     func setKillApp(_ response: KillAppResponse) { lock.withLock { $0.killAppResponse = response } }
+    func setListProcesses(_ response: ProcessesPage) { lock.withLock { $0.listProcessesResponse = response } }
 
     var capturedTimelineRequest: TimelineRequest? { lock.withLock { $0.capturedTimelineRequest } }
     var capturedEventsRequest: EventsRequest? { lock.withLock { $0.capturedEventsRequest } }
@@ -54,6 +63,7 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
     var capturedToggleRuleRequest: ToggleRuleRequest? { lock.withLock { $0.capturedToggleRuleRequest } }
     var capturedKillAppRequest: KillAppRequest? { lock.withLock { $0.capturedKillAppRequest } }
     var capturedSetFocusRequest: SetFocusRequest? { lock.withLock { $0.capturedSetFocusRequest } }
+    var capturedListProcessesRequest: ProcessesQuery? { lock.withLock { $0.capturedListProcessesRequest } }
 
     // MARK: ActivityClientProtocol
 
@@ -128,6 +138,14 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
         try lock.withLock { s in
             s.capturedSetFocusRequest = request
             if let e = s.setFocusError { throw e }
+        }
+    }
+
+    func listProcesses(_ request: ProcessesQuery) async throws -> ProcessesPage {
+        try lock.withLock { s in
+            s.capturedListProcessesRequest = request
+            if let e = s.listProcessesError { throw e }
+            return s.listProcessesResponse
         }
     }
 }
