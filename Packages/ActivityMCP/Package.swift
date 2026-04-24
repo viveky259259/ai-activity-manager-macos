@@ -18,6 +18,9 @@ let package = Package(
                 .product(name: "ActivityCore", package: "ActivityCore"),
                 .product(name: "ActivityIPC", package: "ActivityIPC"),
             ],
+            resources: [
+                .process("Resources"),
+            ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),
             ]

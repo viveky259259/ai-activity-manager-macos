@@ -15,6 +15,7 @@ public enum ReadTools {
             appUsage(client: client),
             listRules(client: client),
             ruleExplain(client: client),
+            listProcesses(client: client),
         ]
     }
 
@@ -201,5 +202,75 @@ public enum ReadTools {
                 .object(["message": .string("not implemented")])
             }
         )
+    }
+
+    // MARK: list_processes
+
+    /// Hard cap mirrored from `ProcessesQueryApplier.maxLimit`. Enforced client-side so an
+    /// over-sized `limit` never travels through XPC; the daemon enforces the same cap.
+    static let listProcessesMaxLimit = 500
+
+    private static func listProcesses(client: any ActivityClientProtocol) -> ToolDefinition {
+        ToolDefinition(
+            name: "list_processes",
+            description: "List live macOS processes with memory/CPU and an app category. Supports sort, limit, filter-by-category, and a minimum-memory filter. Read-only.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "sort_by": .object([
+                        "type": .string("string"),
+                        "enum": .array([.string("memory"), .string("cpu"), .string("name")]),
+                    ]),
+                    "order": .object([
+                        "type": .string("string"),
+                        "enum": .array([.string("asc"), .string("desc")]),
+                    ]),
+                    "limit": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                        "maximum": .int(listProcessesMaxLimit),
+                    ]),
+                    "category": .object(["type": .string("string")]),
+                    "include_restricted": .object(["type": .string("boolean")]),
+                    "min_memory_bytes": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(0),
+                    ]),
+                ]),
+            ]),
+            enabled: true,
+            isWrite: false,
+            handler: { args in
+                let query = ProcessesQuery(
+                    sortBy: parseSortBy(args["sort_by"]),
+                    order: parseOrder(args["order"]),
+                    limit: clampLimit(args["limit"]?.intValue),
+                    category: args["category"]?.stringValue,
+                    includeRestricted: args["include_restricted"]?.boolValue ?? true,
+                    minMemoryBytes: args["min_memory_bytes"]?.intValue.map(UInt64.init)
+                )
+                let page = try await client.listProcesses(query)
+                return try JSONBridge.encode(page)
+            }
+        )
+    }
+
+    private static func parseSortBy(_ value: JSONValue?) -> ProcessesQuery.SortBy {
+        guard let s = value?.stringValue, let sort = ProcessesQuery.SortBy(rawValue: s) else {
+            return .memory
+        }
+        return sort
+    }
+
+    private static func parseOrder(_ value: JSONValue?) -> ProcessesQuery.Order {
+        guard let s = value?.stringValue, let order = ProcessesQuery.Order(rawValue: s) else {
+            return .desc
+        }
+        return order
+    }
+
+    private static func clampLimit(_ value: Int?) -> Int {
+        guard let v = value else { return 50 }
+        return max(1, min(v, listProcessesMaxLimit))
     }
 }

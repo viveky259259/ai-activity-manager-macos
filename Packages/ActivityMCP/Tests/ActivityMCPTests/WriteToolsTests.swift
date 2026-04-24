@@ -77,6 +77,69 @@ struct WriteToolsTests {
         #expect(captured.nl == "when safari focused for 5m quit it")
     }
 
+    @Test("kill_app accepts pid and forwards it as Int32")
+    func killAppWithPidForwards() async throws {
+        let client = FakeActivityClient()
+        let registry = ToolRegistry()
+        for tool in WriteTools.make(client: client) { registry.register(tool) }
+        registry.setEnabled(name: "kill_app", enabled: true)
+
+        let response = await registry.call(
+            name: "kill_app",
+            arguments: .object([
+                "pid": .int(4242),
+                "strategy": .string("signal"),
+            ])
+        )
+        if case .failure(let err) = response {
+            Issue.record("expected success, got \(err)")
+        }
+        let captured = try #require(client.capturedKillAppRequest)
+        #expect(captured.pid == 4242)
+        #expect(captured.bundleID == nil)
+        #expect(captured.strategy == .signal)
+    }
+
+    @Test("kill_app rejects when neither bundle_id nor pid is provided")
+    func killAppRequiresTarget() async throws {
+        let client = FakeActivityClient()
+        let registry = ToolRegistry()
+        for tool in WriteTools.make(client: client) { registry.register(tool) }
+        registry.setEnabled(name: "kill_app", enabled: true)
+
+        let response = await registry.call(name: "kill_app", arguments: .object([:]))
+        switch response {
+        case .failure(let err):
+            #expect(err.code == JSONRPCError.invalidParams.code)
+        case .success:
+            Issue.record("expected invalidParams when target missing")
+        }
+        #expect(client.capturedKillAppRequest == nil)
+    }
+
+    @Test("kill_app rejects when both bundle_id and pid are provided")
+    func killAppRejectsBothTargets() async throws {
+        let client = FakeActivityClient()
+        let registry = ToolRegistry()
+        for tool in WriteTools.make(client: client) { registry.register(tool) }
+        registry.setEnabled(name: "kill_app", enabled: true)
+
+        let response = await registry.call(
+            name: "kill_app",
+            arguments: .object([
+                "bundle_id": .string("com.apple.Safari"),
+                "pid": .int(42),
+            ])
+        )
+        switch response {
+        case .failure(let err):
+            #expect(err.code == JSONRPCError.invalidParams.code)
+        case .success:
+            Issue.record("expected invalidParams when both targets supplied")
+        }
+        #expect(client.capturedKillAppRequest == nil)
+    }
+
     @Test("set_rule_enabled when enabled calls toggleRule")
     func setRuleEnabledCallsToggle() async throws {
         let client = FakeActivityClient()

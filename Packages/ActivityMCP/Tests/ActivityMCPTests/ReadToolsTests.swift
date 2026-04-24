@@ -119,7 +119,7 @@ struct ReadToolsTests {
         #expect(obj["captured_event_count"] == .int(42) || obj["capturedEventCount"] == .int(42))
     }
 
-    @Test("registry exposes all seven read tools including not-implemented ones")
+    @Test("registry exposes all eight read tools including not-implemented ones")
     func allReadToolsListed() async throws {
         let client = FakeActivityClient()
         let tools = ReadTools.make(client: client)
@@ -132,6 +132,7 @@ struct ReadToolsTests {
             "app_usage",
             "list_rules",
             "rule_explain",
+            "list_processes",
         ]
         #expect(names == expected)
     }

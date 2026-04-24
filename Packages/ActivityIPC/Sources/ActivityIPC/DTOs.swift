@@ -145,24 +145,90 @@ public struct DeleteRuleRequest: Codable, Sendable, Equatable {
     }
 }
 
+// MARK: - Processes
+
+public struct ProcessesQuery: Codable, Sendable, Equatable {
+    public enum SortBy: String, Codable, Sendable {
+        case memory, cpu, name
+    }
+
+    public enum Order: String, Codable, Sendable {
+        case asc, desc
+    }
+
+    public let sortBy: SortBy
+    public let order: Order
+    public let limit: Int
+    public let category: String?
+    public let includeRestricted: Bool
+    public let minMemoryBytes: UInt64?
+
+    public init(
+        sortBy: SortBy = .memory,
+        order: Order = .desc,
+        limit: Int = 50,
+        category: String? = nil,
+        includeRestricted: Bool = true,
+        minMemoryBytes: UInt64? = nil
+    ) {
+        self.sortBy = sortBy
+        self.order = order
+        self.limit = limit
+        self.category = category
+        self.includeRestricted = includeRestricted
+        self.minMemoryBytes = minMemoryBytes
+    }
+}
+
+public struct ProcessesPage: Codable, Sendable, Equatable {
+    public let processes: [ProcessSnapshot]
+    public let systemMemoryUsedBytes: UInt64?
+    public let systemMemoryTotalBytes: UInt64?
+    public let sampledAt: Date
+
+    public init(
+        processes: [ProcessSnapshot],
+        systemMemoryUsedBytes: UInt64?,
+        systemMemoryTotalBytes: UInt64?,
+        sampledAt: Date
+    ) {
+        self.processes = processes
+        self.systemMemoryUsedBytes = systemMemoryUsedBytes
+        self.systemMemoryTotalBytes = systemMemoryTotalBytes
+        self.sampledAt = sampledAt
+    }
+}
+
 // MARK: - Action controls
 
 public struct KillAppRequest: Codable, Sendable, Equatable {
-    public let bundleID: String
+    /// Target bundle ID. Mutually exclusive with `pid` — exactly one must be set.
+    public let bundleID: String?
+    /// Target process id. Mutually exclusive with `bundleID`.
+    public let pid: Int32?
     public let strategy: Action.KillStrategy
     public let force: Bool
     public let confirmed: Bool
 
     public init(
-        bundleID: String,
+        bundleID: String? = nil,
+        pid: Int32? = nil,
         strategy: Action.KillStrategy,
         force: Bool,
         confirmed: Bool
     ) {
         self.bundleID = bundleID
+        self.pid = pid
         self.strategy = strategy
         self.force = force
         self.confirmed = confirmed
+    }
+
+    /// True when exactly one of `bundleID` or `pid` is provided. Enforced by
+    /// the MCP tool layer; kept on the DTO so CLI/daemon call sites can
+    /// self-check before dispatching.
+    public var hasExactlyOneTarget: Bool {
+        (bundleID != nil) != (pid != nil)
     }
 }
 

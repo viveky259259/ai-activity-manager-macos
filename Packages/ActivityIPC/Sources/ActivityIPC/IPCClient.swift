@@ -105,6 +105,12 @@ public final class IPCClient: @unchecked Sendable {
         }
     }
 
+    public func listProcesses(_ request: ProcessesQuery) async throws -> ProcessesPage {
+        try await call(request, as: ProcessesPage.self) { proxy, data, reply in
+            proxy.listProcesses(data, reply: reply)
+        }
+    }
+
     // MARK: Internal helpers
 
     /// Send a request envelope and await a response envelope. Uses a checked

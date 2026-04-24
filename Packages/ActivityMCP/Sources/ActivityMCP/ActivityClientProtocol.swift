@@ -16,6 +16,7 @@ public protocol ActivityClientProtocol: Sendable {
     func toggleRule(_ request: ToggleRuleRequest) async throws
     func killApp(_ request: KillAppRequest) async throws -> KillAppResponse
     func setFocusMode(_ request: SetFocusRequest) async throws
+    func listProcesses(_ request: ProcessesQuery) async throws -> ProcessesPage
 }
 
 /// Conform the existing `IPCClient` so production callers can plug it in as-is.
