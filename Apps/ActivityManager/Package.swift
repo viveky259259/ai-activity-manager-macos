@@ -15,6 +15,7 @@ let package = Package(
         .package(path: "../../Packages/ActivityLLM"),
         .package(path: "../../Packages/ActivityIPC"),
         .package(path: "../../Packages/ActivityCapture"),
+        .package(path: "../../Packages/ActivityMCP"),
     ],
     targets: [
         .executableTarget(
@@ -41,6 +42,7 @@ let package = Package(
                 .product(name: "ActivityLLM", package: "ActivityLLM"),
                 .product(name: "ActivityIPC", package: "ActivityIPC"),
                 .product(name: "ActivityCapture", package: "ActivityCapture"),
+                .product(name: "ActivityMCP", package: "ActivityMCP"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),
@@ -52,6 +54,11 @@ let package = Package(
                 "ActivityManagerCore",
                 .product(name: "ActivityCore", package: "ActivityCore"),
                 .product(name: "ActivityCoreTestSupport", package: "ActivityCore"),
+                .product(name: "ActivityStore", package: "ActivityStore"),
+                .product(name: "ActivityIPC", package: "ActivityIPC"),
+                .product(name: "ActivityActions", package: "ActivityActions"),
+                .product(name: "ActivityMCP", package: "ActivityMCP"),
+                .product(name: "ActivityCapture", package: "ActivityCapture"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),

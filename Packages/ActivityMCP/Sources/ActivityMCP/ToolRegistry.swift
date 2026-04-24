@@ -28,6 +28,13 @@ public final class ToolRegistry: @unchecked Sendable {
         }
     }
 
+    /// Peek at a registered tool by name without dispatching it. The
+    /// protocol handler uses this to pick the right rate-limit bucket
+    /// (read vs. write) before invoking `call(name:arguments:)`.
+    public func tool(named name: String) -> ToolDefinition? {
+        state.withLock { $0.tools[name] }
+    }
+
     public func setEnabled(name: String, enabled: Bool) {
         state.withLock { s in
             guard let existing = s.tools[name] else { return }
