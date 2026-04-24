@@ -6,7 +6,15 @@ import ActivityIPC
 
 /// Thread-safe fake `ActivityClientProtocol` for unit tests.
 final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
+    /// Dispatch counters the rate-limit tests read before/after a request to
+    /// confirm the handler gated the second call without hitting the client.
+    struct Calls: Sendable {
+        var status: Int = 0
+        var killApp: [KillAppRequest] = []
+    }
+
     struct State {
+        var calls: Calls = Calls()
         var statusResponse: StatusResponse = StatusResponse(
             sources: ["frontmost"],
             capturedEventCount: 0,
@@ -64,11 +72,13 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
     var capturedKillAppRequest: KillAppRequest? { lock.withLock { $0.capturedKillAppRequest } }
     var capturedSetFocusRequest: SetFocusRequest? { lock.withLock { $0.capturedSetFocusRequest } }
     var capturedListProcessesRequest: ProcessesQuery? { lock.withLock { $0.capturedListProcessesRequest } }
+    var calls: Calls { lock.withLock { $0.calls } }
 
     // MARK: ActivityClientProtocol
 
     func status() async throws -> StatusResponse {
         try lock.withLock { s in
+            s.calls.status += 1
             if let e = s.statusError { throw e }
             return s.statusResponse
         }
@@ -129,6 +139,7 @@ final class FakeActivityClient: ActivityClientProtocol, @unchecked Sendable {
     func killApp(_ request: KillAppRequest) async throws -> KillAppResponse {
         try lock.withLock { s in
             s.capturedKillAppRequest = request
+            s.calls.killApp.append(request)
             if let e = s.killAppError { throw e }
             return s.killAppResponse
         }
