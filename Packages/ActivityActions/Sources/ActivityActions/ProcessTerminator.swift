@@ -55,10 +55,12 @@ public actor ProcessTerminator: ActionExecutor {
     private var config: TerminatorConfig
     private let enabledFlag: OSAllocatedUnfairLock<Bool>
 
-    /// Last successful termination time per bundle ID. Used for cooldown.
+    /// Last successful termination time per cooldown key. Bundle-targeted
+    /// kills use `"bundle:<id>"`; pid-targeted kills use `"pid:<n>"` so the
+    /// two namespaces cannot collide.
     private var lastKilledAt: [String: Date] = [:]
 
-    /// Bundle IDs currently being processed. Prevents two concurrent
+    /// Cooldown keys currently being processed. Prevents two concurrent
     /// terminations from racing through the cooldown window.
     private var inFlight: Set<String> = []
 
@@ -106,18 +108,16 @@ public actor ProcessTerminator: ActionExecutor {
             return .refused(reason: "global kill switch")
         }
 
+        let cooldownKey = "bundle:\(bundleID)"
+
         // Rail 2: Concurrency — only one in-flight request per bundle ID.
-        if inFlight.contains(bundleID) {
+        if inFlight.contains(cooldownKey) {
             return .refused(reason: "cooldown")
         }
 
         // Rail 3: Cooldown window.
-        let now = clock.now()
-        if let last = lastKilledAt[bundleID] {
-            let elapsed = now.timeIntervalSince(last)
-            if elapsed < config.effectiveCooldown {
-                return .refused(reason: "cooldown")
-            }
+        if isInCooldown(key: cooldownKey) {
+            return .refused(reason: "cooldown")
         }
 
         // Resolve target.
@@ -139,28 +139,105 @@ public actor ProcessTerminator: ActionExecutor {
             }
         }
 
-        inFlight.insert(bundleID)
-        defer { inFlight.remove(bundleID) }
+        return await runTermination(
+            pid: target.pid,
+            cooldownKey: cooldownKey,
+            strategy: strategy,
+            force: force
+        )
+    }
 
-        // First attempt: requested strategy.
-        let firstOK = await control.terminate(pid: target.pid, strategy: strategy)
+    /// Pid-direct termination path used by the MCP layer (PRD-10).
+    ///
+    /// No bundle-based target resolution — the caller supplies the pid directly
+    /// (for instance after walking a `list_processes` result). Safety rails stay
+    /// the same: global switch, SIP, unsaved changes on non-force strategies,
+    /// per-pid cooldown, escalation when `force == true`.
+    public func killProcess(
+        pid: Int32,
+        strategy: Action.KillStrategy,
+        force: Bool
+    ) async -> ActionOutcome {
+        // Rail 1: Global kill switch.
+        guard actionsEnabled else {
+            return .refused(reason: "global kill switch")
+        }
+
+        let cooldownKey = "pid:\(pid)"
+
+        // Rail 2: Concurrency guard per-pid.
+        if inFlight.contains(cooldownKey) {
+            return .refused(reason: "cooldown")
+        }
+
+        // Rail 3: Cooldown window.
+        if isInCooldown(key: cooldownKey) {
+            return .refused(reason: "cooldown")
+        }
+
+        // Rail 4: SIP / protected processes. pid < 100 is the live heuristic.
+        if await control.isProtected(pid: pid) {
+            return .notPermitted(reason: "protected process")
+        }
+
+        // Target existence check. Without a bundle we can't enumerate "which
+        // one" — `isAlive` is our only probe. If the pid is gone or was never
+        // there, fall through to refused so the caller gets a clear signal.
+        guard await control.isAlive(pid: pid) else {
+            return .refused(reason: "no matching process")
+        }
+
+        // Rail 5: Unsaved changes — unlike bundle-targeted kills we can't
+        // decide based on frontmost-ness (we don't know the window context
+        // for an arbitrary pid). Apply the unsaved-changes guard whenever the
+        // strategy isn't forceQuit; callers who need to bypass it must pass
+        // `strategy: .forceQuit`.
+        if strategy != .forceQuit {
+            let unsaved = await control.hasUnsavedChanges(pid: pid)
+            if unsaved {
+                return .refused(reason: "unsaved changes")
+            }
+        }
+
+        return await runTermination(
+            pid: pid,
+            cooldownKey: cooldownKey,
+            strategy: strategy,
+            force: force
+        )
+    }
+
+    // MARK: - Shared termination loop
+
+    private func isInCooldown(key: String) -> Bool {
+        guard let last = lastKilledAt[key] else { return false }
+        return clock.now().timeIntervalSince(last) < config.effectiveCooldown
+    }
+
+    private func runTermination(
+        pid: Int32,
+        cooldownKey: String,
+        strategy: Action.KillStrategy,
+        force: Bool
+    ) async -> ActionOutcome {
+        inFlight.insert(cooldownKey)
+        defer { inFlight.remove(cooldownKey) }
+
+        let firstOK = await control.terminate(pid: pid, strategy: strategy)
         if firstOK {
-            let alive = await control.isAlive(pid: target.pid)
+            let alive = await control.isAlive(pid: pid)
             if !alive {
-                lastKilledAt[bundleID] = clock.now()
+                lastKilledAt[cooldownKey] = clock.now()
                 return .succeeded
             }
         }
 
-        // Wait out grace period, polling for process death. Uses wall-clock
-        // because `Task.sleep` advances in real time; the injected `clock` is
-        // reserved for cooldown accounting and event timestamps (so tests
-        // can drive cooldown deterministically without stalling this loop).
+        // Wait out grace period, polling for process death.
         let deadline = Date().addingTimeInterval(config.graceSeconds)
         while Date() < deadline {
-            let alive = await control.isAlive(pid: target.pid)
+            let alive = await control.isAlive(pid: pid)
             if !alive {
-                lastKilledAt[bundleID] = clock.now()
+                lastKilledAt[cooldownKey] = clock.now()
                 return .succeeded
             }
             try? await Task.sleep(nanoseconds: UInt64(config.pollInterval * 1_000_000_000))
@@ -168,10 +245,10 @@ public actor ProcessTerminator: ActionExecutor {
 
         // Still alive. Escalate if caller opted in and we weren't already forcing.
         if force && strategy != .forceQuit {
-            let forceOK = await control.terminate(pid: target.pid, strategy: .forceQuit)
-            let alive = await control.isAlive(pid: target.pid)
+            let forceOK = await control.terminate(pid: pid, strategy: .forceQuit)
+            let alive = await control.isAlive(pid: pid)
             if forceOK && !alive {
-                lastKilledAt[bundleID] = clock.now()
+                lastKilledAt[cooldownKey] = clock.now()
                 return .escalated(previous: strategy.rawValue)
             }
             return .refused(reason: "escalation failed")

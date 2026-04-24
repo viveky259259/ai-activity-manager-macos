@@ -314,4 +314,120 @@ struct ProcessTerminatorTests {
         let outcome = try await terminator.execute(.logMessage("hello"))
         #expect(outcome == .refused(reason: "not handled by this executor"))
     }
+
+    // MARK: - Pid-target kill path (PRD-10)
+
+    @Test("killProcess by pid politeQuits the process")
+    func killProcessByPidSucceeds() async throws {
+        let control = ScriptedProcessControl([
+            .init(pid: 4242, bundleID: "com.example.app")
+        ])
+        let terminator = ProcessTerminator(control: control, clock: FakeClock())
+
+        let outcome = await terminator.killProcess(pid: 4242, strategy: .politeQuit, force: false)
+
+        #expect(outcome == .succeeded)
+        #expect(control.terminateCalls.count == 1)
+        #expect(control.terminateCalls.first?.pid == 4242)
+        #expect(await control.isAlive(pid: 4242) == false)
+    }
+
+    @Test("killProcess honours the global kill switch")
+    func killProcessRespectsGlobalSwitch() async throws {
+        let control = ScriptedProcessControl([
+            .init(pid: 11, bundleID: "com.a")
+        ])
+        let terminator = ProcessTerminator(
+            control: control,
+            clock: FakeClock(),
+            config: TerminatorConfig(actionsEnabled: false)
+        )
+
+        let outcome = await terminator.killProcess(pid: 11, strategy: .politeQuit, force: false)
+
+        #expect(outcome == .refused(reason: "global kill switch"))
+        #expect(control.terminateCalls.isEmpty)
+    }
+
+    @Test("killProcess refuses protected pid with notPermitted")
+    func killProcessProtected() async throws {
+        let control = ScriptedProcessControl([
+            .init(pid: 50, bundleID: "com.apple.system", isProtected: true)
+        ])
+        let terminator = ProcessTerminator(control: control, clock: FakeClock())
+
+        let outcome = await terminator.killProcess(pid: 50, strategy: .politeQuit, force: false)
+
+        #expect(outcome == .notPermitted(reason: "protected process"))
+        #expect(control.terminateCalls.isEmpty)
+    }
+
+    @Test("killProcess refuses unsaved changes on non-force strategy")
+    func killProcessUnsavedRefused() async throws {
+        let control = ScriptedProcessControl([
+            .init(pid: 7, bundleID: "com.editor", hasUnsavedChanges: true)
+        ])
+        let terminator = ProcessTerminator(control: control, clock: FakeClock())
+
+        let outcome = await terminator.killProcess(pid: 7, strategy: .politeQuit, force: false)
+
+        #expect(outcome == .refused(reason: "unsaved changes"))
+        #expect(control.terminateCalls.isEmpty)
+    }
+
+    @Test("killProcess cooldown is keyed per-pid")
+    func killProcessCooldownPerPid() async throws {
+        let control = ScriptedProcessControl([
+            .init(pid: 1, bundleID: "com.a"),
+            .init(pid: 2, bundleID: "com.a")
+        ])
+        let clock = FakeClock()
+        let terminator = ProcessTerminator(
+            control: control,
+            clock: clock,
+            config: TerminatorConfig(cooldown: 60)
+        )
+
+        let first = await terminator.killProcess(pid: 1, strategy: .politeQuit, force: false)
+        #expect(first == .succeeded)
+
+        clock.advance(10) // inside cooldown
+
+        // Same pid → refused by cooldown.
+        let sameAgain = await terminator.killProcess(pid: 1, strategy: .politeQuit, force: false)
+        #expect(sameAgain == .refused(reason: "cooldown"))
+
+        // Different pid → independent bucket, allowed.
+        let differentPid = await terminator.killProcess(pid: 2, strategy: .politeQuit, force: false)
+        #expect(differentPid == .succeeded)
+    }
+
+    @Test("killProcess escalates to forceQuit when force=true and polite fails")
+    func killProcessEscalates() async throws {
+        let control = ScriptedProcessControl([
+            .init(pid: 99, bundleID: "com.stubborn", failingStrategies: [.politeQuit])
+        ])
+        let terminator = ProcessTerminator(
+            control: control,
+            clock: FakeClock(),
+            config: TerminatorConfig(graceSeconds: 0, pollInterval: 0.001)
+        )
+
+        let outcome = await terminator.killProcess(pid: 99, strategy: .politeQuit, force: true)
+
+        #expect(outcome == .escalated(previous: "politeQuit"))
+        #expect(control.terminateCalls.map(\.strategy) == [.politeQuit, .forceQuit])
+        #expect(await control.isAlive(pid: 99) == false)
+    }
+
+    @Test("killProcess on a dead / unknown pid returns no-matching-process")
+    func killProcessUnknownPid() async throws {
+        let control = ScriptedProcessControl()
+        let terminator = ProcessTerminator(control: control, clock: FakeClock())
+
+        let outcome = await terminator.killProcess(pid: 9999, strategy: .politeQuit, force: false)
+
+        #expect(outcome == .refused(reason: "no matching process"))
+        #expect(control.terminateCalls.isEmpty)
+    }
 }
