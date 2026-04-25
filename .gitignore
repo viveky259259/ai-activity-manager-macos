@@ -22,3 +22,6 @@ ActivityManager.app/
 
 # GTM skill outputs (local only)
 outputs/
+
+# Local agent state
+.claude/
