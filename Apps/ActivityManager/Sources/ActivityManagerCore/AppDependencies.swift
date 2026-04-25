@@ -62,13 +62,14 @@ public final class AppDependencies: @unchecked Sendable {
             at: storeURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        // If the real store fails to open (permissions, corrupt file), fall back
-        // to a temp store so the UI can still launch.
+        // If the real store fails to open (permissions, corrupt file), fall
+        // back to a temp store so the UI can still launch. Retry up to 3 times
+        // on unique paths before giving up — only then crash with the real
+        // error so the user sees a meaningful message instead of a force-try.
         if let real = try? SQLiteActivityStore(url: storeURL) {
             self.store = real
         } else {
-            // swiftlint:disable:next force_try
-            self.store = try! SQLiteActivityStore.temporary()
+            self.store = Self.openFallbackStore()
         }
 
         // Capture — wire the live macOS sources. FrontmostAppSource uses
@@ -95,7 +96,12 @@ public final class AppDependencies: @unchecked Sendable {
         #else
         control = ScriptedProcessControl()
         #endif
-        self.actions = ProcessTerminator(control: control)
+        // Privacy-first opt-in: destructive actions are off by default. The
+        // Settings view restores the persisted user choice via setActionsEnabled.
+        self.actions = ProcessTerminator(
+            control: control,
+            config: TerminatorConfig(actionsEnabled: false)
+        )
 
         self.permissions = SystemPermissionsChecker()
         self.current = CurrentActivityState()
@@ -160,15 +166,22 @@ public final class AppDependencies: @unchecked Sendable {
 
     /// Swap the registry's default provider to match the Settings picker.
     /// `.local` routes to the on-device Apple Foundation Models provider when
-    /// available; `.null` falls back to the inert null provider.
-    ///
-    /// `.anthropic` is deferred until API-key loading is wired up — today it
-    /// behaves like `.null` so the UI doesn't crash if the user selects it.
+    /// available; `.null` falls back to the inert null provider; `.anthropic`
+    /// reads the API key from Keychain (service ``KeychainStore/service``,
+    /// account ``KeychainStore/anthropicAccount``) and constructs a real
+    /// ``AnthropicProvider``. If no key is present the registry stays on
+    /// ``NullLLMProvider`` so the UI degrades gracefully — the Settings view
+    /// surfaces the missing-key state separately.
     public func setLLMProvider(_ choice: SettingsViewModel.ProviderChoice) {
         let next: any LLMProvider
         switch choice {
         case .anthropic:
-            next = NullLLMProvider()
+            if let key = KeychainStore.read(account: KeychainStore.anthropicAccount),
+               !key.isEmpty {
+                next = AnthropicProvider(apiKey: key)
+            } else {
+                next = NullLLMProvider()
+            }
         case .local:
             if #available(macOS 26.0, *) {
                 next = AppleFoundationModelsProvider()
@@ -187,6 +200,24 @@ public final class AppDependencies: @unchecked Sendable {
     public static func defaultStoreURL() -> URL {
         URL(fileURLWithPath: NSHomeDirectory())
             .appendingPathComponent("Library/Application Support/ActivityManager/activity.sqlite")
+    }
+
+    /// Last-resort store opener used when the production SQLite path is
+    /// unwritable. Tries up to three uniquely-named temp paths before raising
+    /// a fatal error with the underlying SQLite/GRDB message.
+    private static func openFallbackStore() -> SQLiteActivityStore {
+        var lastError: Error?
+        for _ in 0..<3 {
+            do {
+                return try SQLiteActivityStore.temporary()
+            } catch {
+                lastError = error
+            }
+        }
+        fatalError(
+            "Unable to open ActivityManager store after 3 attempts: " +
+            String(describing: lastError ?? NSError(domain: "ActivityManager", code: -1))
+        )
     }
 }
 

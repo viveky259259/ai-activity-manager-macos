@@ -3,10 +3,27 @@ import ActivityCore
 import ActivityIPC
 import ActivityMCP
 
-// IPCClient already conforms to ActivityClientProtocol (extension in the
-// ActivityMCP module), so no separate adapter is needed. Keeping a typed
-// `any ActivityClientProtocol` reference keeps the tool factories decoupled
-// from the concrete transport.
+// Bumped on every tagged release; embedded so package managers (Homebrew test,
+// MCP host doctor commands, support emails) can probe without reading XPC.
+let activityMCPVersion = "1.0.0"
+
+if CommandLine.arguments.dropFirst().contains(where: { $0 == "--version" || $0 == "-v" }) {
+    print(activityMCPVersion)
+    exit(0)
+}
+
+if CommandLine.arguments.dropFirst().contains(where: { $0 == "--help" || $0 == "-h" }) {
+    print("""
+    activity-mcp \(activityMCPVersion)
+    Stdio MCP server exposing your local activity timeline.
+
+    Usage: activity-mcp                # speak MCP over stdio
+           activity-mcp --version      # print version and exit
+           activity-mcp --help         # this message
+    """)
+    exit(0)
+}
+
 let client: any ActivityClientProtocol = IPCClient(machServiceName: IPCProtocol.machServiceName)
 
 let registry = ToolRegistry()

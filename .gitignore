@@ -12,3 +12,13 @@ xcuserdata/
 *.xcuserstate
 *.xccheckout
 Pods/
+
+# Release artefacts
+build/
+Resources/AppIcon.iconset/
+*.dmg
+*.zip
+ActivityManager.app/
+
+# GTM skill outputs (local only)
+outputs/

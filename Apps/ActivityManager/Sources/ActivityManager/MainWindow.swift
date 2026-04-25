@@ -13,6 +13,7 @@ struct MainWindow: View {
     let deps: AppDependencies
 
     @SceneStorage("MainWindow.section") private var sectionRaw: String = Section.overview.rawValue
+    @State private var showOnboarding: Bool = !UserDefaults.standard.bool(forKey: "onboarding.completed")
 
     private var selected: Binding<Section> {
         Binding(
@@ -30,6 +31,12 @@ struct MainWindow: View {
                 .frame(minWidth: 620, minHeight: 480)
         }
         .navigationSplitViewStyle(.balanced)
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(deps: deps) { showOnboarding = false }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ActivityManager.runOnboarding"))) { _ in
+            showOnboarding = true
+        }
     }
 
     @ViewBuilder

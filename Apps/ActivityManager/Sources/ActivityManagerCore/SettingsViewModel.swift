@@ -39,6 +39,10 @@ public final class SettingsViewModel {
         }
     }
 
+    /// Mirror of whether an Anthropic API key is currently stored in Keychain.
+    /// View toggles this via ``setAnthropicAPIKey(_:)`` / ``clearAnthropicAPIKey()``.
+    public private(set) var hasAnthropicKey: Bool = false
+
     public private(set) var retentionDays: Int
 
     private let defaults: UserDefaults?
@@ -53,7 +57,7 @@ public final class SettingsViewModel {
 
     /// Test-friendly init — no persistence. Pass values explicitly.
     public init(
-        actionsEnabled: Bool = true,
+        actionsEnabled: Bool = false,
         provider: ProviderChoice = .null,
         retentionDays: Int = 30
     ) {
@@ -70,7 +74,7 @@ public final class SettingsViewModel {
         if defaults.object(forKey: Keys.actionsEnabled) != nil {
             self.actionsEnabled = defaults.bool(forKey: Keys.actionsEnabled)
         } else {
-            self.actionsEnabled = true
+            self.actionsEnabled = false
         }
 
         if let raw = defaults.string(forKey: Keys.provider),
@@ -96,5 +100,27 @@ public final class SettingsViewModel {
         let clamped = max(1, days)
         retentionDays = clamped
         defaults?.set(clamped, forKey: Keys.retentionDays)
+    }
+
+    /// Stores `key` in Keychain, marks ``hasAnthropicKey`` true, and re-fires
+    /// `onProviderChange` so ``AppDependencies`` swaps in a real provider when
+    /// the picker is on `.anthropic`.
+    public func setAnthropicAPIKey(_ key: String) {
+        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let ok = KeychainStore.write(trimmed, account: KeychainStore.anthropicAccount)
+        hasAnthropicKey = ok
+        if ok { onProviderChange?(provider) }
+    }
+
+    public func clearAnthropicAPIKey() {
+        _ = KeychainStore.delete(account: KeychainStore.anthropicAccount)
+        hasAnthropicKey = false
+        onProviderChange?(provider)
+    }
+
+    /// Refresh ``hasAnthropicKey`` from Keychain. Call from the view's `.task`.
+    public func refreshAnthropicKeyState() {
+        hasAnthropicKey = KeychainStore.read(account: KeychainStore.anthropicAccount)?.isEmpty == false
     }
 }

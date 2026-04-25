@@ -1,0 +1,48 @@
+{
+  "name": "@viveky/activity-mcp",
+  "version": "1.0.0",
+  "description": "MCP stdio server exposing your local macOS activity timeline to Claude, Cursor, Zed, and other MCP hosts.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "cursor",
+    "zed",
+    "macos",
+    "activity-timeline",
+    "ai-assistant"
+  ],
+  "license": "MIT",
+  "author": "Vivek Yadav <viveky259259@gmail.com>",
+  "homepage": "https://github.com/viveky259259/ai_activity_manager_macos",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viveky259259/ai_activity_manager_macos.git",
+    "directory": "npm"
+  },
+  "bugs": {
+    "url": "https://github.com/viveky259259/ai_activity_manager_macos/issues"
+  },
+  "bin": {
+    "activity-mcp": "bin/activity-mcp.js"
+  },
+  "files": [
+    "bin/",
+    "scripts/postinstall.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64",
+    "x64"
+  ]
+}

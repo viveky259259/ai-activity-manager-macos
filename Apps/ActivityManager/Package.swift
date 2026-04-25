@@ -16,6 +16,7 @@ let package = Package(
         .package(path: "../../Packages/ActivityIPC"),
         .package(path: "../../Packages/ActivityCapture"),
         .package(path: "../../Packages/ActivityMCP"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.17.0"),
     ],
     targets: [
         .executableTarget(
@@ -59,6 +60,7 @@ let package = Package(
                 .product(name: "ActivityActions", package: "ActivityActions"),
                 .product(name: "ActivityMCP", package: "ActivityMCP"),
                 .product(name: "ActivityCapture", package: "ActivityCapture"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),

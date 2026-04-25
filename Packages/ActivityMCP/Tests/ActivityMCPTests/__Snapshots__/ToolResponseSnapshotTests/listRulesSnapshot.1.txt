@@ -1,0 +1,26 @@
+{
+  "rules" : [
+    {
+      "actions" : [
+        {
+          "logMessage" : {
+            "_0" : "hi"
+          }
+        }
+      ],
+      "confirm" : "never",
+      "cooldown" : 60,
+      "createdAt" : "2023-11-14T22:13:20Z",
+      "id" : "F0E1D2C3-B4A5-4968-8778-695A4B3C2D1E",
+      "mode" : "active",
+      "name" : "close-idle-music",
+      "nlSource" : "when iTunes is idle 60m, close it",
+      "trigger" : {
+        "idleEnded" : {
+
+        }
+      },
+      "updatedAt" : "2023-11-14T22:13:20Z"
+    }
+  ]
+}

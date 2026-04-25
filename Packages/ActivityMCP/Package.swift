@@ -10,6 +10,7 @@ let package = Package(
     dependencies: [
         .package(path: "../ActivityCore"),
         .package(path: "../ActivityIPC"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.17.0"),
     ],
     targets: [
         .target(
@@ -32,6 +33,7 @@ let package = Package(
                 .product(name: "ActivityCore", package: "ActivityCore"),
                 .product(name: "ActivityCoreTestSupport", package: "ActivityCore"),
                 .product(name: "ActivityIPC", package: "ActivityIPC"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),

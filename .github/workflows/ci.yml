@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: swift test (${{ matrix.package }})
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - Packages/ActivityCore
+          - Packages/ActivityActions
+          - Packages/ActivityMCP
+          - Apps/ActivityManager
+          - Apps/amctl
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Cache SwiftPM build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ matrix.package }}/.build
+            ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ matrix.package }}-${{ hashFiles(format('{0}/Package.resolved', matrix.package), format('{0}/Package.swift', matrix.package)) }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ matrix.package }}-
+
+      - name: swift test
+        working-directory: ${{ matrix.package }}
+        run: swift test --parallel
+
+  release-build:
+    name: release build smoke
+    runs-on: macos-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: swift build -c release (ActivityManager)
+        run: swift build --package-path Apps/ActivityManager -c release --arch arm64
+
+      - name: swift build -c release (activity-mcp)
+        run: swift build --package-path Apps/activity-mcp -c release --arch arm64
+
+      - name: swift build -c release (amctl)
+        run: swift build --package-path Apps/amctl -c release --arch arm64
+
+      - name: Bundle dry-run
+        run: bash Scripts/build-release.sh
+
+      - name: Verify bundle layout
+        run: |
+          test -x build/release/ActivityManager.app/Contents/MacOS/ActivityManager
+          test -x build/release/ActivityManager.app/Contents/MacOS/activity-mcp
+          test -x build/release/ActivityManager.app/Contents/MacOS/amctl
+          test -f build/release/ActivityManager.app/Contents/Info.plist
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" build/release/ActivityManager.app/Contents/Info.plist
+          ./build/release/ActivityManager.app/Contents/MacOS/amctl --help
+
+  lint:
+    name: swiftlint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: SwiftLint (strict)
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+  security:
+    name: security scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks needs history to scan past commits
+
+      - name: Semgrep (OWASP Top Ten + JS + Swift)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/owasp-top-ten
+            p/javascript
+            p/swift
+            p/secrets
+        env:
+          SEMGREP_TIMEOUT: "300"
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
+          GITLEAKS_ENABLE_SUMMARY: "true"
