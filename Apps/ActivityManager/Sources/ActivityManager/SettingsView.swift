@@ -5,6 +5,8 @@ struct SettingsView: View {
     let deps: AppDependencies
     @State private var viewModel = SettingsViewModel(defaults: .standard)
     @State private var permissions = PermissionsStatusViewModel()
+    @State private var apiKeyDraft: String = ""
+    @State private var apiKeySaved: Bool = false
 
     var body: some View {
         ScrollView {
@@ -25,6 +27,7 @@ struct SettingsView: View {
         .dsAmbientBackground()
         .task {
             permissions.refresh()
+            viewModel.refreshAnthropicKeyState()
             deps.setActionsEnabled(viewModel.actionsEnabled)
             deps.setLLMProvider(viewModel.provider)
             viewModel.onActionsEnabledChange = { [deps] enabled in
@@ -120,7 +123,50 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+
+                if viewModel.provider == .anthropic {
+                    Divider()
+                    anthropicKeyRow
+                }
             }
+        }
+    }
+
+    private var anthropicKeyRow: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
+            HStack {
+                Label("Anthropic API key", systemImage: "key.fill")
+                    .font(.callout)
+                Spacer()
+                DSPill(
+                    viewModel.hasAnthropicKey ? "Saved in Keychain" : "Not set",
+                    kind: viewModel.hasAnthropicKey ? .success : .warning
+                )
+            }
+            HStack(spacing: DS.Space.sm) {
+                SecureField("sk-ant-…", text: $apiKeyDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .autocorrectionDisabled()
+                Button("Save") {
+                    viewModel.setAnthropicAPIKey(apiKeyDraft)
+                    apiKeyDraft = ""
+                    apiKeySaved = viewModel.hasAnthropicKey
+                }
+                .disabled(apiKeyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                if viewModel.hasAnthropicKey {
+                    Button("Clear") {
+                        viewModel.clearAnthropicAPIKey()
+                        apiKeySaved = false
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+            Text("Stored locally in your macOS Keychain (service: \(KeychainStore.service)). Never sent anywhere except api.anthropic.com when you ask the assistant something.")
+                .font(.caption)
+                .foregroundStyle(DS.Palette.textTertiary)
         }
     }
 
@@ -176,8 +222,17 @@ struct SettingsView: View {
     private var storageSection: some View {
         DSCard {
             VStack(alignment: .leading, spacing: DS.Space.sm) {
-                Text("Storage")
-                    .font(.headline)
+                HStack {
+                    Text("Storage")
+                        .font(.headline)
+                    Spacer()
+                    Button("Run walkthrough") {
+                        UserDefaults.standard.set(false, forKey: "onboarding.completed")
+                        NotificationCenter.default.post(name: Notification.Name("ActivityManager.runOnboarding"), object: nil)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
                 Divider()
                 HStack(alignment: .firstTextBaseline) {
                     Label("Database", systemImage: "internaldrive")

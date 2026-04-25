@@ -1,0 +1,24 @@
+[
+  {
+    "apps" : [
+      "Cursor"
+    ],
+    "files" : [
+      "auth.swift",
+      "routes.swift"
+    ],
+    "name" : "auth-service",
+    "total_seconds" : 180
+  },
+  {
+    "apps" : [
+      "Xcode"
+    ],
+    "files" : [
+      "Models.swift",
+      "Views.swift"
+    ],
+    "name" : "widgetshop",
+    "total_seconds" : 240
+  }
+]

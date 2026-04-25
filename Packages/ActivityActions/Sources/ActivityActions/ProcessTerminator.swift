@@ -6,7 +6,9 @@ import ActivityCore
 public struct TerminatorConfig: Sendable {
     /// Master switch. When `false`, every request returns
     /// ``ActionOutcome/refused(reason:)`` with reason `"global kill switch"`.
-    /// Defaults to `true`. The switch is dynamic — use
+    /// Library default is `true` (test convenience); the production app
+    /// composition root forces opt-in via ``TerminatorConfig`` and the persisted
+    /// user setting. Toggle dynamically with
     /// ``ProcessTerminator/setActionsEnabled(_:)``.
     public var actionsEnabled: Bool
 

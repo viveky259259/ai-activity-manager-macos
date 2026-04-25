@@ -44,8 +44,8 @@ struct MCPServerTests {
             Issue.record("expected tools array")
             return
         }
-        // 8 read + 4 write = 12 total
-        #expect(tools.count == 12)
+        // 12 read + 4 write = 16 total
+        #expect(tools.count == 16)
     }
 
     @Test("tools/call dispatches to registry")

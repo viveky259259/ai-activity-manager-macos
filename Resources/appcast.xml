@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sparkle appcast feed. Wired up post-1.0 (see RELEASE.md → "v1.1+ deferred").
+  Until then, the URL below resolves to this file in the main branch and the
+  app does not poll it. When Sparkle is enabled, bump the <enclosure> below
+  with the GitHub Release URL of the new DMG, the SHA256 from the .sha256
+  file we publish alongside it, and the EdDSA signature from `sign_update`.
+-->
+<rss version="2.0"
+     xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>AI Activity Manager</title>
+    <link>https://raw.githubusercontent.com/viveky259259/ai_activity_manager_macos/main/Resources/appcast.xml</link>
+    <description>Releases of AI Activity Manager for macOS.</description>
+    <language>en</language>
+    <!--
+    <item>
+      <title>Version 1.1.0</title>
+      <pubDate>Mon, 01 Jun 2026 09:00:00 +0000</pubDate>
+      <sparkle:version>2</sparkle:version>
+      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/viveky259259/ai_activity_manager_macos/releases/download/v1.1.0/ActivityManager.dmg"
+        sparkle:edSignature="REPLACE_WITH_SIGN_UPDATE_OUTPUT"
+        length="REPLACE_WITH_BYTES"
+        type="application/octet-stream" />
+    </item>
+    -->
+  </channel>
+</rss>

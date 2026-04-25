@@ -73,7 +73,7 @@ struct IdleSourceTests {
         var collected: [ActivityEvent] = []
         for await e in source.events {
             collected.append(e)
-            if collected.count > 0 { break }
+            if !collected.isEmpty { break }
         }
         #expect(collected.isEmpty)
     }

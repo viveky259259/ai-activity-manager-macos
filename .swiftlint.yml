@@ -1,0 +1,64 @@
+included:
+  - Apps
+  - Packages
+
+excluded:
+  - "**/.build"
+  - "**/Tests/**/__Snapshots__"
+  - "**/Generated"
+  - Resources
+
+# Hard "don't merge this" rules. Keep this list small — scope creep here turns
+# the lint job into noise, and reviewers learn to ignore it.
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - explicit_init
+  - first_where
+  - last_where
+  - sorted_first_last
+  - toggle_bool
+  - prefer_zero_over_explicit_init
+  - redundant_nil_coalescing
+  - operator_usage_whitespace
+  - closure_spacing
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - empty_collection_literal
+  - identical_operands
+
+analyzer_rules:
+  - unused_import
+
+disabled_rules:
+  - todo                              # WIP markers are fine; they're searchable
+  - line_length                       # we enforce by review, not by lint
+  - trailing_comma                    # SwiftPM/SwiftUI styles vary; not worth a fight
+  - identifier_name                   # too many domain-correct short names (e.g. `nl`)
+  - type_name                         # same; `Rule`, `IPC` etc.
+  - nesting
+  - large_tuple                       # collapsed-row aggregations use 3-tuples on purpose
+  - force_try                         # `try!` in test setup is fine; lint shouldn't gate it
+  - colon                             # we use column-aligned switch cases on purpose
+  - comma                             # same — alignment within enum-arg lists wins
+  - optional_data_string_conversion   # `String(data:encoding:)` is the Foundation idiom we use
+  - static_over_final_class           # test-class-method idioms in XCTest fixtures
+
+# Bumped to allow domain types (DTOs, Settings views) without splitting.
+type_body_length:
+  warning: 600
+  error: 800
+
+file_length:
+  warning: 600
+  error: 1000
+
+function_body_length:
+  warning: 80
+  error: 160
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+reporter: "github-actions-logging"

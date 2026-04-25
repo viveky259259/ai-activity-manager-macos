@@ -1,0 +1,13 @@
+{
+  "actions_enabled" : true,
+  "captured_event_count" : 12345,
+  "permissions" : {
+    "accessibility" : "granted",
+    "calendar" : "denied"
+  },
+  "schema_version" : 1,
+  "sources" : [
+    "frontmost",
+    "idle"
+  ]
+}

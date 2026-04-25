@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleDisplayName</key>
+    <string>Activity Manager</string>
+    <key>CFBundleExecutable</key>
+    <string>ActivityManager</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.activitymanager.app</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>ActivityManager</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>26.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 Vivek Yadav. MIT License.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Activity Manager uses Apple Events to politely quit applications when you (or a rule you authorized) ask it to.</string>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>Activity Manager reads window titles and frontmost-app state to build your local activity timeline. All data stays on this Mac.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Activity Manager can correlate calendar events with your activity timeline. Calendar access is optional.</string>
+    <key>NSFocusStatusUsageDescription</key>
+    <string>Activity Manager can read your Focus mode to skip captures during Do Not Disturb, and (if you enable rules) change Focus on your behalf.</string>
+</dict>
+</plist>
