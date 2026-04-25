@@ -16,7 +16,6 @@ let package = Package(
         .package(path: "../../Packages/ActivityIPC"),
         .package(path: "../../Packages/ActivityCapture"),
         .package(path: "../../Packages/ActivityMCP"),
-        .package(path: "../../Packages/ActivityWebGateway"),
     ],
     targets: [
         .executableTarget(
@@ -44,7 +43,6 @@ let package = Package(
                 .product(name: "ActivityIPC", package: "ActivityIPC"),
                 .product(name: "ActivityCapture", package: "ActivityCapture"),
                 .product(name: "ActivityMCP", package: "ActivityMCP"),
-                .product(name: "ActivityWebGateway", package: "ActivityWebGateway"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency"),

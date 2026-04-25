@@ -12,11 +12,3 @@ xcuserdata/
 *.xcuserstate
 *.xccheckout
 Pods/
-
-# Flutter / Dart
-Apps/activity-web-flutter/build/
-Apps/activity-web-flutter/.dart_tool/
-Apps/activity-web-flutter/.flutter-plugins
-Apps/activity-web-flutter/.flutter-plugins-dependencies
-Apps/activity-web-flutter/pubspec.lock
-Apps/activity-web-flutter/*.iml

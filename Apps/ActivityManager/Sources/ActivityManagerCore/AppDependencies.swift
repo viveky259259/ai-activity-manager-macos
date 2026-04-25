@@ -6,8 +6,6 @@ import ActivityCapture
 import ActivityLLM
 import ActivityActions
 import ActivityIPC
-import ActivityMCP
-import ActivityWebGateway
 
 /// Composition root for the ActivityManager app.
 ///
@@ -51,19 +49,6 @@ public final class AppDependencies: @unchecked Sendable {
 
     public func setIPCServer(_ server: IPCServer) {
         ipcServerState.withLock { $0 = server }
-    }
-
-    /// Live MCP audit broadcaster — fans `tools/call` outcomes out to the web
-    /// gateway's WebSocket subscribers. Replaces `NullAuditLogger` in
-    /// `DefaultMCPHandler` once the host wires MCP into the daemon.
-    public let auditBroadcaster = BroadcastingAuditLogger()
-
-    /// Web gateway is initialised in `bootstrap()` after the IPC handler
-    /// exists. Guarded for Swift 6 strict concurrency.
-    private let gatewayState = OSAllocatedUnfairLock<WebGateway?>(initialState: nil)
-
-    public var webGateway: WebGateway? {
-        gatewayState.withLock { $0 }
     }
 
     @MainActor
@@ -148,7 +133,6 @@ public final class AppDependencies: @unchecked Sendable {
         }
 
         startIPCServer()
-        await startWebGateway()
     }
 
     /// Stands up the Mach-service XPC listener so CLI/MCP clients can reach
@@ -166,46 +150,6 @@ public final class AppDependencies: @unchecked Sendable {
         let listener = server.makeMachServiceListener()
         listener.resume()
         setIPCServer(server)
-    }
-
-    /// Stands up the HTTP/WebSocket gateway that backs the Flutter web UI.
-    /// Bound to localhost only — no remote network exposure.
-    private func startWebGateway() async {
-        let handler = ProductionIPCHandler(
-            store: store,
-            terminator: actions,
-            sampler: sampler,
-            permissions: permissions,
-            memorySource: memorySource,
-            captureStatuses: { [capture] in capture.statuses }
-        )
-        let staticRoot = Self.flutterWebRoot()
-        let gateway = WebGateway(
-            handler: handler,
-            broadcaster: auditBroadcaster,
-            staticRoot: staticRoot,
-            host: "127.0.0.1",
-            port: 8765
-        )
-        do {
-            try await gateway.start()
-            gatewayState.withLock { $0 = gateway }
-        } catch {
-            // Port collision or sandbox denial — non-fatal; the menu-bar UI
-            // and XPC listener still work without the web view.
-        }
-    }
-
-    /// Looks for the Flutter `web/` build output beside the daemon binary so
-    /// the gateway can serve `/index.html` and the bundled assets. Returns
-    /// `nil` if no build is present — the gateway will only expose the API.
-    private static func flutterWebRoot() -> URL? {
-        let candidates = [
-            URL(fileURLWithPath: NSHomeDirectory())
-                .appendingPathComponent("Library/Application Support/ActivityManager/web"),
-            Bundle.main.resourceURL?.appendingPathComponent("web"),
-        ].compactMap { $0 }
-        return candidates.first { FileManager.default.fileExists(atPath: $0.path) }
     }
 
     /// Forwards the master kill-switch to the action executor. Call from the
