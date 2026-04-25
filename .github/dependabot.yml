@@ -1,0 +1,50 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "swift"
+    directory: "/Apps/ActivityManager"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "swift"
+    directory: "/Apps/amctl"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "swift"
+    directory: "/Apps/activity-mcp"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "swift"
+    directory: "/Packages/ActivityCore"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "swift"
+    directory: "/Packages/ActivityActions"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "swift"
+    directory: "/Packages/ActivityMCP"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "swift"
+    directory: "/Packages/ActivityStore"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "npm"
+    directory: "/npm"
+    schedule:
+      interval: "weekly"

@@ -316,7 +316,11 @@ public enum ReadTools {
                 )).events
 
                 let repos = aggregateRepoSpans(events: events, now: now)
-                    .sorted { $0.totalSeconds > $1.totalSeconds }
+                    .sorted { lhs, rhs in
+                        lhs.totalSeconds == rhs.totalSeconds
+                            ? lhs.name < rhs.name
+                            : lhs.totalSeconds > rhs.totalSeconds
+                    }
                 let trimmed = limit.map { Array(repos.prefix(max(1, $0))) } ?? repos
 
                 let projects: [JSONValue] = trimmed.map { repo in
@@ -365,7 +369,11 @@ public enum ReadTools {
                 )).events
 
                 let repos = aggregateRepoSpans(events: events, now: now)
-                    .sorted { $0.totalSeconds > $1.totalSeconds }
+                    .sorted { lhs, rhs in
+                        lhs.totalSeconds == rhs.totalSeconds
+                            ? lhs.name < rhs.name
+                            : lhs.totalSeconds > rhs.totalSeconds
+                    }
                 let entries: [JSONValue] = repos.map { repo in
                     .object([
                         "repo": .string(repo.name),

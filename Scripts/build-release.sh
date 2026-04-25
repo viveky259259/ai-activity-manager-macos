@@ -177,4 +177,6 @@ echo
 echo "Done."
 echo "  Bundle: $APP"
 echo "  Zip:    $BUILD_DIR/ActivityManager.zip"
-[[ "$DMG" -eq 1 ]] && echo "  DMG:    $BUILD_DIR/ActivityManager.dmg"
+if [[ "$DMG" -eq 1 ]]; then
+  echo "  DMG:    $BUILD_DIR/ActivityManager.dmg"
+fi

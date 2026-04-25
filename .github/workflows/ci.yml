@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     name: swift test (${{ matrix.package }})
-    runs-on: macos-latest
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix:
@@ -47,7 +47,7 @@ jobs:
 
   release-build:
     name: release build smoke
-    runs-on: macos-latest
+    runs-on: macos-26
     needs: test
     steps:
       - uses: actions/checkout@v4
@@ -75,7 +75,7 @@ jobs:
 
   lint:
     name: swiftlint
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
