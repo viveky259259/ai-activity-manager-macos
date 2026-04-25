@@ -1,0 +1,15 @@
+{
+  "id": "auto-focus-when-slack-closed",
+  "name": "Focus on when Slack is closed for 5 min",
+  "trigger": {
+    "type": "appQuit",
+    "bundleID": "com.tinyspeck.slackmacgap",
+    "for": 300
+  },
+  "action": {
+    "type": "setFocusMode",
+    "name": "Do Not Disturb"
+  },
+  "confirm": "once",
+  "enabled": true
+}

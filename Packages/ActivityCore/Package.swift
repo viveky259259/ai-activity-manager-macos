@@ -8,6 +8,9 @@ let package = Package(
         .library(name: "ActivityCore", targets: ["ActivityCore"]),
         .library(name: "ActivityCoreTestSupport", targets: ["ActivityCoreTestSupport"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.0"),
+    ],
     targets: [
         .target(
             name: "ActivityCore",

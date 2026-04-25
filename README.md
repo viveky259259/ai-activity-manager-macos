@@ -1,5 +1,10 @@
 # AI Activity Manager for macOS
 
+[![CI](https://github.com/viveky259259/ai-activity-manager-macos/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/viveky259259/ai-activity-manager-macos/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/viveky259259/ai-activity-manager-macos/branch/main/graph/badge.svg)](https://codecov.io/gh/viveky259259/ai-activity-manager-macos)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![All Contributors](https://img.shields.io/github/all-contributors/viveky259259/ai-activity-manager-macos?color=ee8449)](#contributors)
+
 **Local memory + audit log for your AI assistant.** Open source · MIT · MCP-native.
 
 ![Overview](docs/launch/assets/screenshots/01-overview.png)
@@ -214,6 +219,35 @@ docs/
 - **TDD** — Red → Green → Refactor. Never merge without tests.
 - **Privacy-first** — local capture is non-negotiable; cloud LLM opt-in per feature; API key stored in macOS Keychain.
 - **Safety-first actions** — destructive actions default to **off**; require explicit user opt-in plus per-bundle cooldown, SIP guards, and an unsaved-changes check before terminating.
+
+## Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/viveky259259"><img src="https://avatars.githubusercontent.com/u/4400000?v=4?s=100" width="100px;" alt="Vivek Yadav"/><br /><sub><b>Vivek Yadav</b></sub></a><br /><a href="#code-viveky259259" title="Code">💻</a> <a href="#design-viveky259259" title="Design">🎨</a> <a href="#doc-viveky259259" title="Documentation">📖</a> <a href="#ideas-viveky259259" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-viveky259259" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-viveky259259" title="Maintenance">🚧</a> <a href="#projectManagement-viveky259259" title="Project Management">📆</a></td>
+    </tr>
+  </tbody>
+</table>
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://allcontributors.org)
+specification. Contributions of any kind welcome — see
+[CONTRIBUTING.md](./CONTRIBUTING.md). To recognize a contribution, comment on
+any PR/issue:
+
+```
+@all-contributors please add @<username> for code, doc
+```
+
+(Requires the [all-contributors bot](https://allcontributors.org/docs/en/bot/installation) installed on the repo.)
 
 ## License
 

@@ -43,7 +43,44 @@ jobs:
 
       - name: swift test
         working-directory: ${{ matrix.package }}
-        run: swift test --parallel
+        run: swift test --parallel --enable-code-coverage
+
+      - name: Export coverage (lcov)
+        working-directory: ${{ matrix.package }}
+        run: |
+          BIN_PATH="$(swift build --show-bin-path)"
+          PROFDATA="$BIN_PATH/codecov/default.profdata"
+          if [ ! -f "$PROFDATA" ]; then
+            echo "No profdata for ${{ matrix.package }} — skipping coverage export."
+            exit 0
+          fi
+          # Find any test bundle binary swift produces.
+          XCTEST_BIN=$(find "$BIN_PATH" -maxdepth 2 -name "*.xctest" -print -quit || true)
+          if [ -z "$XCTEST_BIN" ]; then
+            XCTEST_BIN=$(find "$BIN_PATH" -maxdepth 2 -type f -perm +111 -name "*PackageTests*" -print -quit || true)
+          fi
+          if [ -z "$XCTEST_BIN" ]; then
+            echo "No xctest bundle to extract coverage from — skipping."
+            exit 0
+          fi
+          BIN_TO_EXPORT="$XCTEST_BIN"
+          if [ -d "$XCTEST_BIN" ]; then
+            BIN_TO_EXPORT="$XCTEST_BIN/Contents/MacOS/$(basename "$XCTEST_BIN" .xctest)"
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/coverage"
+          SAFE_NAME=$(echo "${{ matrix.package }}" | tr '/' '_')
+          xcrun llvm-cov export \
+            "$BIN_TO_EXPORT" \
+            -instr-profile "$PROFDATA" \
+            -format=lcov > "$GITHUB_WORKSPACE/coverage/$SAFE_NAME.lcov"
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ strategy.job-index }}
+          path: coverage/*.lcov
+          if-no-files-found: ignore
 
   release-build:
     name: release build smoke
@@ -113,3 +150,31 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "true"
           GITLEAKS_ENABLE_SUMMARY: "true"
+
+  coverage:
+    name: coverage upload
+    runs-on: ubuntu-latest
+    needs: test
+    if: always() && github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: coverage
+          pattern: coverage-*
+          merge-multiple: true
+
+      - name: List coverage files
+        run: ls -la coverage/ || echo "no coverage files"
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/*.lcov
+          flags: unittests
+          name: ai-activity-manager-macos
+          fail_ci_if_error: false
+          verbose: true

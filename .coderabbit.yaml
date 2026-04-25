@@ -1,0 +1,64 @@
+# https://docs.coderabbit.ai/guides/configuration-overview
+# This file is read by CodeRabbit (https://coderabbit.ai) on every PR. Free
+# for open-source public repos.
+
+language: en-US
+early_access: false
+tone_instructions: >
+  Be concise and technical. Prioritize correctness, security, and Swift 6
+  strict concurrency issues. Skip stylistic nits handled by SwiftLint.
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_filters:
+    - "!**/Package.resolved"
+    - "!**/__Snapshots__/**"
+    - "!build/**"
+    - "!docs/launch/assets/**"
+
+  path_instructions:
+    - path: "Packages/**/Sources/**/*.swift"
+      instructions: >
+        Library code — flag any non-Sendable captures, force-unwraps, blocking
+        I/O on @MainActor, or reliance on global mutable state. Prefer
+        constructor injection over singletons.
+
+    - path: "Apps/**/Sources/**/*.swift"
+      instructions: >
+        Application code — verify @MainActor boundaries, that views read from
+        observable models rather than directly mutating store state, and that
+        new public surfaces are intentional.
+
+    - path: "Packages/ActivityActions/**"
+      instructions: >
+        Action executor handles destructive operations (kill app, focus mode).
+        Confirm every new branch respects the actionsEnabled gate and
+        ConfirmPolicy semantics. Audit log entries must include the rule ID
+        and outcome.
+
+    - path: "Packages/ActivityMCP/**"
+      instructions: >
+        MCP server is the public protocol surface. Schema changes must be
+        backward-compatible with v1.0 hosts. Any new write tool requires a
+        feature flag and an audit log entry.
+
+    - path: ".github/workflows/**"
+      instructions: >
+        GitHub Actions YAML — flag pinned actions without SHA where security
+        matters, missing concurrency groups on long-running jobs, or secrets
+        leaked via run output.
+
+chat:
+  auto_reply: true

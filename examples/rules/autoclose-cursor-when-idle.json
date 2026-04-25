@@ -1,0 +1,18 @@
+{
+  "id": "autoclose-cursor-when-idle",
+  "name": "Quit Cursor after 90 min idle (politely)",
+  "trigger": {
+    "type": "idleEntered",
+    "scope": { "bundleID": "com.todesktop.230313mzl4w4u92" },
+    "for": 5400
+  },
+  "action": {
+    "type": "killApp",
+    "bundleID": "com.todesktop.230313mzl4w4u92",
+    "strategy": "quit",
+    "force": false
+  },
+  "confirm": "always",
+  "enabled": false,
+  "notes": "Disabled by default. Requires the global Actions toggle ON. `strategy: quit` honours unsaved-changes prompts; `force: false` means SIP guards apply."
+}
