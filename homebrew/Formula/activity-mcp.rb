@@ -1,6 +1,6 @@
 class ActivityMcp < Formula
   desc "MCP stdio server exposing your local activity timeline to AI assistants"
-  homepage "https://github.com/viveky259259/ai_activity_manager_macos"
+  homepage "https://github.com/viveky259259/ai-activity-manager-macos"
   version "1.0.0"
   license "MIT"
 
@@ -9,12 +9,12 @@ class ActivityMcp < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/viveky259259/ai_activity_manager_macos/releases/download/v#{version}/activity-mcp-arm64.tar.gz"
-      sha256 "REPLACE_WITH_ARM64_SHA256_AT_RELEASE_TIME"
+      url "https://github.com/viveky259259/ai-activity-manager-macos/releases/download/v#{version}/activity-mcp-arm64.tar.gz"
+      sha256 "2cda29f51c12c762a63d5874225ae107bef223a2f158adeaf2c6a859543eb176"
     end
     on_intel do
-      url "https://github.com/viveky259259/ai_activity_manager_macos/releases/download/v#{version}/activity-mcp-x86_64.tar.gz"
-      sha256 "REPLACE_WITH_X86_64_SHA256_AT_RELEASE_TIME"
+      url "https://github.com/viveky259259/ai-activity-manager-macos/releases/download/v#{version}/activity-mcp-x86_64.tar.gz"
+      sha256 "ad587ed295b068fedb9328bd25aa45238dc8a39256a93d1dfeac0fcde960635f"
     end
   end
 
@@ -36,7 +36,7 @@ class ActivityMcp < Formula
       Without the macOS app installed, the server runs in standalone mode and
       will return empty results for capture-dependent tools (current_activity,
       recent_projects, etc.) until the daemon is also running. See
-      https://github.com/viveky259259/ai_activity_manager_macos for setup.
+      https://github.com/viveky259259/ai-activity-manager-macos for setup.
     EOS
   end
 
