@@ -1,0 +1,13 @@
+// Zed: ~/.config/zed/settings.json — merge the `context_servers` block.
+// Note: the path below assumes Homebrew install on Apple Silicon. Use
+// `/usr/local/bin/activity-mcp` on Intel, or `which activity-mcp` to check.
+{
+  "context_servers": {
+    "activity": {
+      "command": {
+        "path": "/opt/homebrew/bin/activity-mcp",
+        "args": []
+      }
+    }
+  }
+}

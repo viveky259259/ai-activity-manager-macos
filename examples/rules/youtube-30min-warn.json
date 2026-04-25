@@ -1,0 +1,16 @@
+{
+  "id": "youtube-30min-warn",
+  "name": "Nudge after 30 min of YouTube",
+  "trigger": {
+    "type": "windowTitleMatches",
+    "pattern": "YouTube",
+    "for": 1800
+  },
+  "action": {
+    "type": "postNotification",
+    "title": "30 min of YouTube",
+    "body": "Want to switch back to whatever you were doing?"
+  },
+  "confirm": "never",
+  "enabled": true
+}

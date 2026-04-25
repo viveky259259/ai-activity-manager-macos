@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"time_per_repo","arguments":{"window":"7d"}}}

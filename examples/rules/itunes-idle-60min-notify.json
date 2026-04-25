@@ -1,0 +1,17 @@
+{
+  "id": "itunes-idle-60min-notify",
+  "name": "Notify when iTunes is idle for 60 min",
+  "trigger": {
+    "type": "idleEntered",
+    "scope": { "bundleID": "com.apple.Music" },
+    "for": 3600
+  },
+  "action": {
+    "type": "postNotification",
+    "title": "Music has been idle for an hour",
+    "body": "Tap to close it (interactive close pending v1.1 — see issue #2)."
+  },
+  "confirm": "once",
+  "enabled": true,
+  "notes": "When issue #2 ships, the action will switch to `interactiveNotification` with an explicit Close button bound to killApp."
+}

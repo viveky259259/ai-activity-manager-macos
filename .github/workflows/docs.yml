@@ -1,0 +1,96 @@
+name: Docs (DocC → Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Packages/ActivityCore/Sources/**"
+      - "Packages/ActivityMCP/Sources/**"
+      - "Packages/ActivityActions/Sources/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: swift --version
+
+      - name: Build DocC archives
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+
+          # One static site per package, mounted under its own subpath so the
+          # landing page can link to each. swift-docc's static-hosting flag
+          # rewrites links so each archive is self-contained.
+          for pkg in Packages/ActivityCore Packages/ActivityMCP Packages/ActivityActions; do
+            target="$(basename "$pkg")"
+            echo "» Building DocC for $target"
+            swift package --package-path "$pkg" \
+              --allow-writing-to-directory ./_site/"$target" \
+              generate-documentation \
+              --target "$target" \
+              --disable-indexing \
+              --transform-for-static-hosting \
+              --hosting-base-path "ai-activity-manager-macos/$target" \
+              --output-path ./_site/"$target" || {
+                echo "⚠ DocC build failed for $target — continuing (DocC plugin may need to be added per-package)."
+              }
+          done
+
+      - name: Write index.html
+        run: |
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Activity Manager — API Reference</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 720px; margin: 4rem auto; padding: 0 1.5rem; line-height: 1.5; color: #1d1d1f; }
+              a { color: #0366d6; }
+              code { background: #f6f8fa; padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.95em; }
+              ul { padding-left: 1.25rem; }
+            </style>
+          </head>
+          <body>
+            <h1>Activity Manager — API reference</h1>
+            <p>Generated with <a href="https://www.swift.org/documentation/docc/">Swift-DocC</a> on every push to <code>main</code>.</p>
+            <ul>
+              <li><a href="ActivityCore/documentation/activitycore/">ActivityCore</a> — domain types and use cases</li>
+              <li><a href="ActivityMCP/documentation/activitymcp/">ActivityMCP</a> — JSON-RPC server, tool registry</li>
+              <li><a href="ActivityActions/documentation/activityactions/">ActivityActions</a> — action executors and audit log</li>
+            </ul>
+            <p><a href="https://github.com/viveky259259/ai-activity-manager-macos">Repo</a> · <a href="https://github.com/viveky259259/ai-activity-manager-macos/releases">Releases</a> · <a href="https://github.com/viveky259259/ai-activity-manager-macos/issues">Issues</a></p>
+          </body>
+          </html>
+          HTML
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

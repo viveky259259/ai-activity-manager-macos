@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "activity": {
+      "command": "/opt/homebrew/bin/activity-mcp",
+      "args": [],
+      "env": {}
+    },
+    "activity-with-writes": {
+      "command": "/opt/homebrew/bin/activity-mcp",
+      "args": ["--allow-writes"],
+      "env": {}
+    }
+  }
+}
