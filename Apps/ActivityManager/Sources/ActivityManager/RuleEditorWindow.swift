@@ -1,4 +1,5 @@
 import SwiftUI
+import ActivityCore
 import ActivityManagerCore
 
 struct RuleEditorView: View {
@@ -22,6 +23,8 @@ struct RuleEditorView: View {
                     "Rules",
                     subtitle: "Describe a rule in plain English and compile it to the DSL"
                 )
+
+                savedRulesCard
 
                 DSCard {
                     VStack(alignment: .leading, spacing: DS.Space.sm) {
@@ -144,5 +147,82 @@ struct RuleEditorView: View {
             .padding(DS.Space.lg)
         }
         .dsAmbientBackground()
+        .task { await viewModel.loadRules() }
+    }
+
+    @ViewBuilder
+    private var savedRulesCard: some View {
+        DSCard {
+            VStack(alignment: .leading, spacing: DS.Space.sm) {
+                HStack {
+                    Text("Saved rules")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(DS.Palette.textSecondary)
+                    Spacer()
+                    if viewModel.isLoadingRules {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        DSPill(
+                            "\(viewModel.rules.count)",
+                            symbol: "tray.full",
+                            kind: viewModel.rules.isEmpty ? .info : .success
+                        )
+                    }
+                    Button {
+                        Task { await viewModel.loadRules() }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .buttonStyle(.plain)
+                    .help("Refresh saved rules")
+                    .accessibilityLabel("Refresh saved rules")
+                }
+
+                if viewModel.rules.isEmpty {
+                    Text("No saved rules yet. Describe one below and press Save.")
+                        .font(.callout)
+                        .foregroundStyle(DS.Palette.textTertiary)
+                        .padding(.vertical, DS.Space.sm)
+                } else {
+                    VStack(spacing: DS.Space.xs) {
+                        ForEach(viewModel.rules) { rule in
+                            savedRuleRow(rule)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func savedRuleRow(_ rule: Rule) -> some View {
+        HStack(alignment: .top, spacing: DS.Space.sm) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(rule.name)
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(DS.Palette.textPrimary)
+                    .lineLimit(2)
+                Text(rule.id.uuidString.prefix(8) + " · " + rule.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.caption)
+                    .foregroundStyle(DS.Palette.textTertiary)
+            }
+            Spacer()
+            DSPill(
+                rule.mode.rawValue,
+                symbol: rule.mode == .active ? "bolt.fill" : "eye",
+                kind: rule.mode == .active ? .success : .info
+            )
+            Button(role: .destructive) {
+                Task { await viewModel.deleteRule(id: rule.id) }
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.plain)
+            .help("Delete rule")
+            .accessibilityLabel("Delete rule \(rule.name)")
+        }
+        .padding(.vertical, DS.Space.xs)
+        .padding(.horizontal, DS.Space.sm)
+        .background(DS.Palette.surfaceRaised, in: RoundedRectangle(cornerRadius: DS.Radius.sm, style: .continuous))
     }
 }

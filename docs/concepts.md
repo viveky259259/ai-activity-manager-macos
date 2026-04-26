@@ -165,7 +165,7 @@ The provider is **only used by the menu-bar app**. The MCP server never calls an
 
 ## Rule
 
-A declarative trigger + condition + action(s) JSON file. Lives in `~/Library/Application Support/ActivityManager/rules/`.
+A declarative trigger + condition + action(s). Stored as rows in the `rules` table inside the main SQLite database (`~/Library/Application Support/ActivityManager/activity.sqlite`). The JSON files in [`../examples/rules/`](../examples/rules/) are *importable* snippets — paste them into the Rules tab editor or via `create_rule` MCP tool, and they become rows.
 
 Schema (informal):
 ```json
