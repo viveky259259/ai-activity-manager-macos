@@ -16,6 +16,8 @@ Your AI assistant has no memory of what you actually worked on yesterday. AI Act
 - **Audited & rate-limited writes.** Every `tools/call` lands in a local audit log. Per-client rate limits (60/min read, 10/min write). Destructive actions require an explicit user toggle the AI cannot flip.
 - **Two LLM backends.** Apple Foundation Models on-device (macOS 26) for queries that never leave the network. Anthropic opt-in, key in Keychain.
 
+> **New here?** Start with the [docs](docs/README.md) — [`overview`](docs/overview.md) (what & why) · [`getting-started`](docs/getting-started.md) (10-min install) · [`use-cases`](docs/use-cases.md) (15 prompts that work today) · [`concepts`](docs/concepts.md) (the vocabulary) · [`reference`](docs/reference.md) (every tool & CLI) · [`privacy-and-safety`](docs/privacy-and-safety.md) (the safety story).
+
 ## Install
 
 ### MCP server only (any AI dev — recommended)
