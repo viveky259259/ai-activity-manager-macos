@@ -168,8 +168,7 @@ Most commands accept `--format json` for machine-readable output. The shell scri
 
 | Path | What |
 |---|---|
-| `~/Library/Application Support/ActivityManager/db.sqlite` | Main database (events, sessions, rules, audit) |
-| `~/Library/Application Support/ActivityManager/rules/*.json` | Individual rule files |
+| `~/Library/Application Support/ActivityManager/activity.sqlite` | Main database (events, sessions, rules, audit log) |
 | `~/Library/Application Support/ActivityManager/settings.plist` | Toggles, retention, provider choice |
 | `~/Library/Logs/ActivityManager/*.log` | Daemon logs |
 | Keychain: `service=com.viveky.ActivityManager, account=anthropic-api-key` | Anthropic key, if you saved one |
@@ -182,7 +181,7 @@ Removing the database is the canonical "reset to factory" operation. The schema 
 
 | Variable | What | Default |
 |---|---|---|
-| `ACTIVITY_MANAGER_DB_PATH` | Override database location | `~/Library/Application Support/ActivityManager/db.sqlite` |
+| `ACTIVITY_MANAGER_DB_PATH` | Override database location | `~/Library/Application Support/ActivityManager/activity.sqlite` |
 | `ACTIVITY_MANAGER_LOG_LEVEL` | `debug | info | warn | error` | `info` |
 | `RUN_SNAPSHOT_TESTS` | Set to `1` to run image-snapshot tests (CI gates them off by default) | unset |
 

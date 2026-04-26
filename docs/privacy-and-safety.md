@@ -121,7 +121,7 @@ This is also why the rules engine exists separately from the AI surface: rules a
 | No input monitoring | `codesign -d --entitlements :- /Applications/ActivityManager.app` shows no input entitlements |
 | Audit log captures every write | `amctl audit log` after any GUI kill, rule kill, or MCP kill |
 | Anthropic key never leaves Keychain | `security find-generic-password -s com.viveky.ActivityManager` to inspect; `grep -r "sk-ant"` over Application Support shows no plaintext |
-| Database is plain SQLite | `sqlite3 ~/Library/Application\ Support/ActivityManager/db.sqlite ".schema"` |
+| Database is plain SQLite | `sqlite3 ~/Library/Application\ Support/ActivityManager/activity.sqlite ".schema"` |
 | Source matches binary | Build from source per README; `shasum -a 256` of your build vs. notarized release |
 
 ---
