@@ -5,7 +5,7 @@ import ActivityMCP
 
 // Bumped on every tagged release; embedded so package managers (Homebrew test,
 // MCP host doctor commands, support emails) can probe without reading XPC.
-let activityMCPVersion = "1.0.0"
+let activityMCPVersion = "1.0.1"
 
 if CommandLine.arguments.dropFirst().contains(where: { $0 == "--version" || $0 == "-v" }) {
     print(activityMCPVersion)
@@ -24,7 +24,9 @@ if CommandLine.arguments.dropFirst().contains(where: { $0 == "--help" || $0 == "
     exit(0)
 }
 
-let client: any ActivityClientProtocol = IPCClient(machServiceName: IPCProtocol.machServiceName)
+let client: any ActivityClientProtocol = FallbackActivityClient(
+    primary: IPCClient(machServiceName: IPCProtocol.machServiceName)
+)
 
 let registry = ToolRegistry()
 

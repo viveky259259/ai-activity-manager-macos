@@ -4,11 +4,11 @@ Authoritative tool + CLI surface. For semantics, see [`concepts.md`](concepts.md
 
 ---
 
-## MCP tools (16 total)
+## MCP tools (17 total)
 
 All tools speak JSON-RPC over stdio. Schemas are published via `tools/list` so any MCP-compliant host auto-discovers them. Verify with `./Scripts/mcp-inspect.sh`.
 
-### Read tools (12) — rate-limited 60/min/client
+### Read tools (13) — rate-limited 60/min/client
 
 #### `status`
 **What:** Daemon health + capture-source toggles.
@@ -21,6 +21,12 @@ All tools speak JSON-RPC over stdio. Schemas are published via `tools/list` so a
 **Args:** `{ sortBy?: "memory" | "cpu" | "name", limit?: int }`
 **Returns:** Array of `{ pid, bundleId, name, cpuPercent, memoryMB, isFrontmost }`
 **Use:** "What's hogging RAM right now?"
+
+#### `launchd_restart_storms`
+**What:** Detects launchd jobs stuck in crash/restart loops, including `KeepAlive` agents with low throttle intervals.
+**Args:** `{ domain?: "user" | "system" | "both", min_runs?: int, limit?: int }`
+**Returns:** `[{ label, domain, plistPath, program, runs, lastExitCode, immediateReason, recentStderr, severity, explanation }]`
+**Use:** Diagnose hidden CPU churn, launchservicesd spikes, and system-wide input lag caused by broken background agents.
 
 #### `timeline`
 **What:** Recent events, paginated.

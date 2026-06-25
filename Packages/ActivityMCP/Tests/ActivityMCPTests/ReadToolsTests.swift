@@ -133,6 +133,7 @@ struct ReadToolsTests {
             "list_rules",
             "rule_explain",
             "list_processes",
+            "launchd_restart_storms",
             "recent_projects",
             "time_per_repo",
             "files_touched",

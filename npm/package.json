@@ -1,6 +1,6 @@
 {
   "name": "@viveky/activity-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP stdio server exposing your local macOS activity timeline to Claude, Cursor, Zed, and other MCP hosts.",
   "keywords": [
     "mcp",

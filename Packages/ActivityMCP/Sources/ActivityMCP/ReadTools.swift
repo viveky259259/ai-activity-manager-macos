@@ -16,6 +16,7 @@ public enum ReadTools {
             listRules(client: client),
             ruleExplain(client: client),
             listProcesses(client: client),
+            launchdRestartStorms(),
             recentProjects(client: client),
             timePerRepo(client: client),
             filesTouched(client: client),
@@ -276,6 +277,47 @@ public enum ReadTools {
     private static func clampLimit(_ value: Int?) -> Int {
         guard let v = value else { return 50 }
         return max(1, min(v, listProcessesMaxLimit))
+    }
+
+    // MARK: launchd_restart_storms
+
+    private static func launchdRestartStorms() -> ToolDefinition {
+        ToolDefinition(
+            name: "launchd_restart_storms",
+            description: "Find macOS launchd jobs that are repeatedly crashing/restarting, a common hidden cause of CPU spikes, launchservicesd churn, and input lag.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "domain": .object([
+                        "type": .string("string"),
+                        "enum": .array([.string("user"), .string("system"), .string("both")]),
+                        "description": .string("Launchd domain to scan. Defaults to user."),
+                    ]),
+                    "min_runs": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                        "description": .string("Minimum launch count to report. Defaults to 25."),
+                    ]),
+                    "limit": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                        "maximum": .int(100),
+                    ]),
+                ]),
+            ]),
+            enabled: true,
+            isWrite: false,
+            handler: { args in
+                let domain = args["domain"]?.stringValue ?? "user"
+                let minRuns = args["min_runs"]?.intValue ?? 25
+                let limit = args["limit"]?.intValue ?? 20
+                return try JSONBridge.encode(LaunchdRestartStormDetector.snapshot(
+                    domain: domain,
+                    minRuns: minRuns,
+                    limit: limit
+                ))
+            }
+        )
     }
 
     // MARK: recent_projects

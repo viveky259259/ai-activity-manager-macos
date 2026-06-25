@@ -56,7 +56,7 @@ The full app bundles `activity-mcp`. Add to your AI host's config:
 }
 ```
 
-Restart Claude Desktop. In a new chat, ask *"What MCP tools do you have available?"* — you should see `activity-manager` listed with 12 read tools.
+Restart Claude Desktop. In a new chat, ask *"What MCP tools do you have available?"* — you should see `activity-manager` listed with 13 read tools.
 
 ---
 

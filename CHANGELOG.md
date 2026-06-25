@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-06-25
+
+### Added
+- MCP read tool `launchd_restart_storms` detects macOS LaunchAgents/Daemons stuck in crash/restart loops, including `KeepAlive` jobs with aggressive `ThrottleInterval` settings. This helps diagnose hidden CPU churn, `launchservicesd` spikes, and system-wide input lag like delayed or dropped keystrokes.
+- `activity-mcp` can now fall back to a local read-only process sampler for `list_processes` when the companion app IPC service is unavailable in local development.
+
 ## [1.0.0] — 2026-04-25
 
 First public release.

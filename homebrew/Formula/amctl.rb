@@ -1,7 +1,7 @@
 class Amctl < Formula
   desc "Command-line client for AI Activity Manager"
   homepage "https://github.com/viveky259259/ai-activity-manager-macos"
-  version "1.0.0"
+  version "1.0.1"
   license "MIT"
 
   depends_on :macos
