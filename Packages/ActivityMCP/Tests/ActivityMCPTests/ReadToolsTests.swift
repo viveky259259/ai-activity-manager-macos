@@ -134,6 +134,7 @@ struct ReadToolsTests {
             "rule_explain",
             "list_processes",
             "launchd_restart_storms",
+            "diagnose_system_slowdown",
             "recent_projects",
             "time_per_repo",
             "files_touched",

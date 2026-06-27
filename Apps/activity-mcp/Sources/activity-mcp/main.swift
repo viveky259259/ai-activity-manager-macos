@@ -5,7 +5,7 @@ import ActivityMCP
 
 // Bumped on every tagged release; embedded so package managers (Homebrew test,
 // MCP host doctor commands, support emails) can probe without reading XPC.
-let activityMCPVersion = "1.0.1"
+let activityMCPVersion = "1.0.2"
 
 if CommandLine.arguments.dropFirst().contains(where: { $0 == "--version" || $0 == "-v" }) {
     print(activityMCPVersion)

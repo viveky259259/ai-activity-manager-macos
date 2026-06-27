@@ -1,7 +1,7 @@
 class ActivityMcp < Formula
   desc "MCP stdio server exposing your local activity timeline to AI assistants"
   homepage "https://github.com/viveky259259/ai-activity-manager-macos"
-  version "1.0.1"
+  version "1.0.2"
   license "MIT"
 
   depends_on :macos

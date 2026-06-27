@@ -17,6 +17,7 @@ public enum ReadTools {
             ruleExplain(client: client),
             listProcesses(client: client),
             launchdRestartStorms(),
+            diagnoseSystemSlowdown(client: client),
             recentProjects(client: client),
             timePerRepo(client: client),
             filesTouched(client: client),
@@ -314,6 +315,93 @@ public enum ReadTools {
                 return try JSONBridge.encode(LaunchdRestartStormDetector.snapshot(
                     domain: domain,
                     minRuns: minRuns,
+                    limit: limit
+                ))
+            }
+        )
+    }
+
+    // MARK: diagnose_system_slowdown
+
+    private static func diagnoseSystemSlowdown(client: any ActivityClientProtocol) -> ToolDefinition {
+        ToolDefinition(
+            name: "diagnose_system_slowdown",
+            description: "Return ranked slowdown suspects from live process pressure and launchd restart storms in one AI-friendly diagnostic call.",
+            inputSchema: .object([
+                "type": .string("object"),
+                "properties": .object([
+                    "limit": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                        "maximum": .int(50),
+                        "description": .string("Maximum findings to return. Defaults to 10."),
+                    ]),
+                    "process_sample_limit": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                        "maximum": .int(listProcessesMaxLimit),
+                        "description": .string("How many top CPU and memory processes to sample. Defaults to 50."),
+                    ]),
+                    "min_cpu_percent": .object([
+                        "type": .string("number"),
+                        "minimum": .int(0),
+                        "description": .string("CPU threshold for process findings. Defaults to 20."),
+                    ]),
+                    "min_memory_bytes": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(0),
+                        "description": .string("Memory threshold for process findings. Defaults to 1073741824."),
+                    ]),
+                    "include_launchd": .object([
+                        "type": .string("boolean"),
+                        "description": .string("Whether to include launchd restart-storm detection. Defaults to true."),
+                    ]),
+                    "launchd_domain": .object([
+                        "type": .string("string"),
+                        "enum": .array([.string("user"), .string("system"), .string("both")]),
+                        "description": .string("Launchd domain to scan when include_launchd is true. Defaults to user."),
+                    ]),
+                    "launchd_min_runs": .object([
+                        "type": .string("integer"),
+                        "minimum": .int(1),
+                        "description": .string("Minimum launch count to report for launchd jobs. Defaults to 25."),
+                    ]),
+                ]),
+            ]),
+            enabled: true,
+            isWrite: false,
+            handler: { args in
+                let limit = max(1, min(args["limit"]?.intValue ?? 10, 50))
+                let processSampleLimit = max(1, min(args["process_sample_limit"]?.intValue ?? 50, listProcessesMaxLimit))
+                let minCPUPercent = max(0, args["min_cpu_percent"]?.doubleValue ?? 20)
+                let minMemoryBytes = UInt64(max(0, args["min_memory_bytes"]?.intValue ?? 1_073_741_824))
+                let includeLaunchd = args["include_launchd"]?.boolValue ?? true
+                let launchdDomain = args["launchd_domain"]?.stringValue ?? "user"
+                let launchdMinRuns = max(1, args["launchd_min_runs"]?.intValue ?? 25)
+
+                async let cpuPage = client.listProcesses(ProcessesQuery(
+                    sortBy: .cpu,
+                    order: .desc,
+                    limit: processSampleLimit,
+                    includeRestricted: true
+                ))
+                async let memoryPage = client.listProcesses(ProcessesQuery(
+                    sortBy: .memory,
+                    order: .desc,
+                    limit: processSampleLimit,
+                    includeRestricted: true
+                ))
+
+                let launchdStorms = includeLaunchd
+                    ? LaunchdRestartStormDetector.snapshot(domain: launchdDomain, minRuns: launchdMinRuns, limit: limit)
+                    : nil
+
+                return try await JSONBridge.encode(SystemSlowdownDiagnostics.makeResponse(
+                    cpuProcesses: cpuPage,
+                    memoryProcesses: memoryPage,
+                    launchdStorms: launchdStorms,
+                    minCPUPercent: minCPUPercent,
+                    minMemoryBytes: minMemoryBytes,
                     limit: limit
                 ))
             }
