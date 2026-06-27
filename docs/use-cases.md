@@ -93,12 +93,14 @@ Every section below is a real workflow with a copy-pasteable prompt and the tool
 
 ## 8. "Why is my computer slow right now?"
 
-**The pain:** Things feel sluggish. You don't know what's hogging RAM.
+**The pain:** Things feel sluggish. Keyboard input is delayed or dropped, and the cause might be a visible app, a helper process, or a broken background LaunchAgent.
 
 **The prompt:**
-> Call `list_processes` sorted by memory descending. Top 10. For each, tell me when I last actually used it (`query_timeline`). If I haven't touched it in 30+ minutes and it's over 1 GB, suggest closing it.
+> Call `diagnose_system_slowdown` with launchd checks enabled. Explain the top suspects in plain English, including any process CPU/memory pressure and any restart-storming LaunchAgents. Do not kill anything; suggest the next safe command or app action for each suspect.
 
-**Tools used:** `list_processes`, `query_timeline` — read-only, even the suggestion is text
+**Tools used:** `diagnose_system_slowdown` — read-only, even the suggestion is text
+
+**Why this exists:** An AI assistant can always regenerate `ps`, `top`, `launchctl print`, and `log show` commands. That works, but it wastes tokens and turns. The specialized MCP tool returns structured process and launchd evidence in one call so the assistant spends its context on diagnosis instead of command construction.
 
 ---
 

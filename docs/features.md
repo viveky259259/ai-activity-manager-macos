@@ -29,9 +29,9 @@ PRD: `docs/prds/PRD-09-ActivityManager-app.md`. Design system primitives (`DSCar
 
 ## MCP server (`activity-mcp`)
 
-13 read tools + 4 write tools, all exposed over stdio JSON-RPC.
+14 read tools + 4 write tools, all exposed over stdio JSON-RPC.
 
-**Read (13)** — `status`, `list_processes`, `launchd_restart_storms`, `timeline`, `query_timeline`, `permissions_status`, `current_activity`, `list_rules`, `audit_log`, `recent_projects`, `time_per_repo`, `files_touched`, `current_context`.
+**Read (14)** — `status`, `list_processes`, `launchd_restart_storms`, `diagnose_system_slowdown`, `timeline`, `query_timeline`, `permissions_status`, `current_activity`, `list_rules`, `audit_log`, `recent_projects`, `time_per_repo`, `files_touched`, `current_context`.
 
 **Write (4)** — `kill_app`, `create_rule`, `update_rule`, `delete_rule`. All four require the user-controlled Actions toggle.
 

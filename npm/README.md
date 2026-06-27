@@ -63,6 +63,7 @@ Read-only:
 - `files_touched(repo, window)` → distinct files seen in IDE titles
 - `current_context()` → repo / branch / file / app right now
 - `launchd_restart_storms()` → crash-looping LaunchAgents/Daemons that can cause CPU churn and input lag
+- `diagnose_system_slowdown()` → ranked slowdown suspects from processes + launchd restart storms
 - `current_activity()`, `timeline_range(...)`, `events_search(...)`,
   `app_usage(...)`, `list_rules(...)`, `list_processes(...)`
 

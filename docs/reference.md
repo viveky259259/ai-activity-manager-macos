@@ -4,11 +4,11 @@ Authoritative tool + CLI surface. For semantics, see [`concepts.md`](concepts.md
 
 ---
 
-## MCP tools (17 total)
+## MCP tools (18 total)
 
 All tools speak JSON-RPC over stdio. Schemas are published via `tools/list` so any MCP-compliant host auto-discovers them. Verify with `./Scripts/mcp-inspect.sh`.
 
-### Read tools (13) — rate-limited 60/min/client
+### Read tools (14) — rate-limited 60/min/client
 
 #### `status`
 **What:** Daemon health + capture-source toggles.
@@ -27,6 +27,12 @@ All tools speak JSON-RPC over stdio. Schemas are published via `tools/list` so a
 **Args:** `{ domain?: "user" | "system" | "both", min_runs?: int, limit?: int }`
 **Returns:** `[{ label, domain, plistPath, program, runs, lastExitCode, immediateReason, recentStderr, severity, explanation }]`
 **Use:** Diagnose hidden CPU churn, launchservicesd spikes, and system-wide input lag caused by broken background agents.
+
+#### `diagnose_system_slowdown`
+**What:** One-call slowdown triage that ranks high CPU/memory processes alongside launchd restart storms.
+**Args:** `{ limit?: int, process_sample_limit?: int, min_cpu_percent?: number, min_memory_bytes?: int, include_launchd?: bool, launchd_domain?: "user" | "system" | "both", launchd_min_runs?: int }`
+**Returns:** `[{ kind, severity, score, title, explanation, evidence, suggestedNextStep, process?, launchd? }]` plus sample timestamps and system memory totals.
+**Use:** Ask "what is making this Mac slow?" without making an AI client regenerate `ps`, `top`, `launchctl`, and `log show` commands on every turn.
 
 #### `timeline`
 **What:** Recent events, paginated.
